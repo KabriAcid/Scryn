@@ -45,8 +45,15 @@ const OrderSchema = z.object({
   photo: z.any().refine(file => file instanceof File, 'A photo is required.'),
   orderItems: z.array(z.object({
     denomination: z.enum(denominationEnum),
-    quantity: z.coerce.number().min(1, "Min 1").min(100, 'Min 100 cards per denomination.'),
-  })).min(1, 'You must select at least one denomination and set a quantity.'),
+    quantity: z.coerce.number().min(1, "Min 1"),
+  })).min(1, 'You must select at least one denomination and set a quantity.')
+  .refine(items => {
+    const item2k = items.find(item => item.denomination === '2000');
+    return !item2k || item2k.quantity >= 100;
+  }, {
+    message: 'Quantity for ₦2k cards must be at least 100.',
+    path: ['orderItems'],
+  })
 }).refine(data => {
     const totalQuantity = data.orderItems.reduce((acc, item) => acc + item.quantity, 0);
     return totalQuantity >= 100;
@@ -153,7 +160,8 @@ export function OrderForm() {
     if (itemIndex > -1) {
         remove(itemIndex);
     } else {
-        append({ denomination: id as any, quantity: 100 });
+        const defaultQuantity = id === '2000' ? 100 : 1;
+        append({ denomination: id as any, quantity: defaultQuantity });
     }
   };
 
@@ -209,7 +217,7 @@ export function OrderForm() {
               exit="exit"
               className="absolute w-full h-full"
             >
-              <div className="h-full overflow-y-auto pr-2 space-y-4">
+              <div className="h-full overflow-y-auto pr-4 space-y-4 no-scrollbar">
                 {step === 1 && (
                   <>
                     <div className="grid grid-cols-[1fr_2fr] gap-4">
