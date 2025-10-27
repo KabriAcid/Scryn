@@ -7,7 +7,7 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function NewOrderPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 pt-24 md:pt-4">
         <header className="absolute top-0 left-0 w-full p-4 md:p-6">
             <div className='flex items-center justify-between'>
                 <Logo />
