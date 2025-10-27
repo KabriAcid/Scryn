@@ -167,8 +167,9 @@ export function OrderForm() {
 
   const selectedDenominations = fields.map(f => f.denomination);
   
-  const totalQuantity = form.watch('orderItems').reduce((acc, item) => acc + (Number(item.quantity) || 0), 0);
-  const totalValue = form.watch('orderItems').reduce((acc, item) => acc + (parseInt(item.denomination) * (Number(item.quantity) || 0)), 0);
+  const watchedOrderItems = form.watch('orderItems');
+  const totalQuantity = watchedOrderItems.reduce((acc, item) => acc + (Number(item.quantity) || 0), 0);
+  const totalValue = watchedOrderItems.reduce((acc, item) => acc + (parseInt(item.denomination) * (Number(item.quantity) || 0)), 0);
 
   return (
     <Form {...form}>
@@ -305,6 +306,8 @@ export function OrderForm() {
                             <div className="space-y-2">
                                 {fields.map((field, index) => {
                                     const denomination = denominations.find(d => d.id === field.denomination);
+                                    const is2kCard = field.denomination === '2000';
+                                    const minQuantity = is2kCard ? 100 : 1;
                                     return (
                                         <Card key={field.id} className="p-3 flex items-center justify-between">
                                             <div className='font-semibold'>{denomination?.label} cards</div>
@@ -315,7 +318,7 @@ export function OrderForm() {
                                                     render={({ field }) => (
                                                         <FormItem>
                                                             <FormControl>
-                                                                <QuantityInput {...field} />
+                                                                <QuantityInput {...field} min={minQuantity} />
                                                             </FormControl>
                                                             <FormMessage className="text-xs" />
                                                         </FormItem>

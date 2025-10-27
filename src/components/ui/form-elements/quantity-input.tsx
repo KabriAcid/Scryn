@@ -4,18 +4,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Minus, Plus } from 'lucide-react';
 
-const QuantityInput = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
-  ({ className, ...props }, ref) => {
+interface QuantityInputProps extends React.ComponentProps<'input'> {
+  min?: number;
+}
+
+const QuantityInput = React.forwardRef<HTMLInputElement, QuantityInputProps>(
+  ({ className, min = 1, ...props }, ref) => {
     const { value, onChange } = props;
     const numericValue = Number(value);
 
     const handleIncrement = () => {
-      const e = { target: { value: String(numericValue + 100) } } as React.ChangeEvent<HTMLInputElement>;
+      const e = { target: { value: String(numericValue + 10) } } as React.ChangeEvent<HTMLInputElement>;
       onChange?.(e);
     };
 
     const handleDecrement = () => {
-      const e = { target: { value: String(Math.max(0, numericValue - 100)) } } as React.ChangeEvent<HTMLInputElement>;
+      const newValue = Math.max(min, numericValue - 10);
+      const e = { target: { value: String(newValue) } } as React.ChangeEvent<HTMLInputElement>;
       onChange?.(e);
     };
 
@@ -27,7 +32,7 @@ const QuantityInput = React.forwardRef<HTMLInputElement, React.ComponentProps<'i
           size="icon"
           className="h-8 w-8"
           onClick={handleDecrement}
-          disabled={numericValue <= 0}
+          disabled={numericValue <= min}
         >
           <Minus className="h-4 w-4" />
         </Button>
