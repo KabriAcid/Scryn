@@ -14,7 +14,7 @@ import { createOrder } from '@/app/order/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { cn } from '@/lib/utils';
-import { Checkbox } from '../ui/checkbox';
+import { DenominationPicker } from '../ui/form-elements/denomination-picker';
 
 const politicalParties = ["ACN", "PDP", "APC", "LP", "NNPP", "APGA"];
 const titles = ["Hon.", "Chief", "Dr.", "Mr.", "Mrs.", "Ms."];
@@ -244,7 +244,7 @@ export function OrderForm() {
                 <FormField
                   control={form.control}
                   name="denomination"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
                       <div className="mb-4">
                         <FormLabel className="text-base">Card Denomination (₦)</FormLabel>
@@ -252,41 +252,9 @@ export function OrderForm() {
                           Select one or more denominations for this order.
                         </p>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                      {denominations.map((item) => (
-                        <FormField
-                          key={item.id}
-                          control={form.control}
-                          name="denomination"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
-                                key={item.id}
-                                className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(item.id)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...(field.value || []), item.id])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                              (value) => value !== item.id
-                                            )
-                                          );
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="font-normal text-lg">
-                                  {item.label}
-                                </FormLabel>
-                              </FormItem>
-                            );
-                          }}
-                        />
-                      ))}
-                      </div>
+                      <FormControl>
+                        <DenominationPicker field={field} denominations={denominations} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
