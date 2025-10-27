@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { redirect } from 'next/navigation';
 
 const OrderSchema = z.object({
-  politicianName: z.string().min(3, 'Politician name must be at least 3 characters.'),
+  politicianName: z.string().min(3, 'Name must be at least 3 characters.'),
   politicalParty: z.string().min(2, 'Political party must be at least 2 characters.'),
   // Photo validation will be handled client-side for now.
   denomination: z.string().refine(val => !isNaN(parseInt(val, 10)), {

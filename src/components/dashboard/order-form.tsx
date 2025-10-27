@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useEffect, useState } from 'react';
+import React, 'useActionState', useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,7 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { cn } from '@/lib/utils';
 
 const OrderSchema = z.object({
-  politicianName: z.string().min(3, 'Politician name must be at least 3 characters.'),
+  politicianName: z.string().min(3, 'Name must be at least 3 characters.'),
   politicalParty: z.string().min(2, 'Political party must be at least 2 characters.'),
   photo: z.any().refine(file => file instanceof File, 'A photo is required.'),
   denomination: z.string().refine(val => !isNaN(parseInt(val, 10)), {
@@ -28,7 +28,7 @@ const OrderSchema = z.object({
 type OrderFormValues = z.infer<typeof OrderSchema>;
 
 const STEPS = [
-  { id: 1, title: 'Politician Details', fields: ['politicianName', 'politicalParty', 'photo'] as const, icon: User },
+  { id: 1, title: 'Card Customization', fields: ['politicianName', 'politicalParty', 'photo'] as const, icon: User },
   { id: 2, title: 'Card Details', fields: ['denomination', 'quantity'] as const, icon: Wallet },
 ];
 
@@ -157,7 +157,7 @@ export function OrderForm() {
               >
                 <FormField control={form.control} name="politicianName" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Politician&apos;s Full Name</FormLabel>
+                    <FormLabel>Full Name (to be printed on card)</FormLabel>
                     <FormControl><Input placeholder="Hon. John Doe" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -171,7 +171,7 @@ export function OrderForm() {
                 )} />
                  <FormField control={form.control} name="photo" render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Politician&apos;s Photo</FormLabel>
+                        <FormLabel>Photo for Card</FormLabel>
                         <FormControl>
                             <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted">
                                 {photoPreview ? (
@@ -198,7 +198,7 @@ export function OrderForm() {
                 custom={direction}
                 variants={stepVariants}
                 initial="hidden"
-animate="visible"
+                animate="visible"
                 exit="exit"
                 className="space-y-4 absolute w-full"
               >
