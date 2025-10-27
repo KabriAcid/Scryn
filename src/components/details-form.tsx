@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useActionState, useEffect, useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, LoaderCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -17,6 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+
 
 const nigerianBanks = [
     "Access Bank", "Citibank", "Ecobank Nigeria", "Fidelity Bank Nigeria", "First Bank of Nigeria",
@@ -41,10 +46,24 @@ const initialState = {
 };
 
 const STEPS = [
-  { id: 1, title: 'Personal Info' },
-  { id: 2, title: 'Bank Details' },
-  { id: 3, title: 'Location' },
+  { id: 1, title: 'Personal Info', fields: ['accountName', 'email', 'phone', 'nin'] as const },
+  { id: 2, title: 'Bank Details', fields: ['accountNumber', 'bankName', 'bvn'] as const },
+  { id: 3, title: 'Location', fields: ['state', 'lga'] as const },
 ];
+
+const formSchema = z.object({
+    accountName: z.string().min(2, { message: "Full name must be at least 2 characters." }),
+    email: z.string().email({ message: "Please enter a valid email address." }),
+    phone: z.string().regex(/^0[789][01]\d{8}$/, { message: "Please enter a valid Nigerian phone number." }),
+    nin: z.string().regex(/^\d{11}$/, { message: "NIN must be 11 digits." }),
+    accountNumber: z.string().regex(/^\d{10}$/, { message: "Account number must be 10 digits." }),
+    bankName: z.string({ required_error: 'Please select a bank.' }),
+    bvn: z.string().regex(/^\d{11}$/, { message: "BVN must be 11 digits." }),
+    state: z.string({ required_error: 'Please select a state.' }),
+    lga: z.string({ required_error: 'Please select an LGA.' }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 const stepVariants = {
   hidden: (direction: number) => ({
@@ -76,9 +95,24 @@ export function DetailsForm() {
 
   const [ipAddress, setIpAddress] = useState('');
   const [location, setLocation] = useState('');
-  const [selectedState, setSelectedState] = useState('');
-  const [lgas, setLgas] = useState<string[]>([]);
-  const [lgaKey, setLgaKey] = useState(0);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    mode: 'onTouched',
+    defaultValues: {
+        accountName: '',
+        email: '',
+        phone: '',
+        nin: '',
+        accountNumber: '',
+        bankName: undefined,
+        bvn: '',
+        state: undefined,
+        lga: undefined,
+    }
+  });
+
+  const selectedState = form.watch('state');
 
   useEffect(() => {
     fetch('https://ipapi.co/json/')
@@ -93,14 +127,12 @@ export function DetailsForm() {
         setLocation('Unavailable');
       })
   }, []);
-
-  const handleStateChange = (state: string) => {
-    setSelectedState(state);
-    setLgas(statesAndLgas[state] || []);
-    setLgaKey(prev => prev + 1); // Reset LGA select
-  };
   
-  const nextStep = () => {
+  const nextStep = async () => {
+    const fields = STEPS[step - 1].fields;
+    const output = await form.trigger(fields, { shouldFocus: true });
+    if (!output) return;
+
     setDirection(1);
     setStep(prev => (prev < STEPS.length ? prev + 1 : prev));
   };
@@ -110,6 +142,7 @@ export function DetailsForm() {
   };
 
   return (
+    <Form {...form}>
     <form action={formAction} className="space-y-8 overflow-hidden">
       {state.status !== 'idle' && state.message && (
         <Alert variant={state.status === 'error' ? 'destructive' : 'default'} className={cn(
@@ -156,26 +189,38 @@ export function DetailsForm() {
                     initial="hidden"
                     animate="visible"
                     exit="exit"
-                    className="space-y-6 absolute w-full"
+                    className="space-y-4 absolute w-full"
                 >
-                  <div className="space-y-2">
-                      <Label htmlFor="account-name">Full Name (as on bank account)</Label>
-                      <Input id="account-name" name="accountName" placeholder="John Doe" required />
-                  </div>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                          <Label htmlFor="email">Email Address</Label>
-                          <Input id="email" name="email" type="email" placeholder="you@example.com" required />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="phone">Phone Number</Label>
-                          <Input id="phone" name="phone" type="tel" placeholder="08012345678" required />
-                      </div>
-                  </div>
-                  <div className="space-y-2">
-                      <Label htmlFor="nin">NIN (National Identification Number)</Label>
-                      <Input id="nin" name="nin" placeholder="111-111-111-11" required />
-                  </div>
+                    <FormField control={form.control} name="accountName" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Full Name (as on bank account)</FormLabel>
+                            <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <FormField control={form.control} name="email" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Email Address</FormLabel>
+                                <FormControl><Input type="email" placeholder="you@example.com" {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <FormField control={form.control} name="phone" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Phone Number</FormLabel>
+                                <FormControl><Input type="tel" placeholder="08012345678" {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                    </div>
+                     <FormField control={form.control} name="nin" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>NIN (National Identification Number)</FormLabel>
+                            <FormControl><Input placeholder="11111111111" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
                 </motion.div>
               )}
 
@@ -187,31 +232,38 @@ export function DetailsForm() {
                     initial="hidden"
                     animate="visible"
                     exit="exit"
-                    className="space-y-6 absolute w-full"
+                    className="space-y-4 absolute w-full"
                 >
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                          <Label htmlFor="account-number">Bank Account Number</Label>
-                          <Input id="account-number" name="accountNumber" placeholder="0123456789" required />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="bank-name">Bank Name</Label>
-                          <Select name="bankName" required>
-                              <SelectTrigger id="bank-name">
-                                  <SelectValue placeholder="Select your bank" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  {nigerianBanks.map(bank => (
-                                      <SelectItem key={bank} value={bank}>{bank}</SelectItem>
-                                  ))}
-                              </SelectContent>
-                          </Select>
-                      </div>
+                     <FormField control={form.control} name="accountNumber" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Bank Account Number</FormLabel>
+                            <FormControl><Input placeholder="0123456789" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                     <FormField control={form.control} name="bankName" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Bank Name</FormLabel>
+                             <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Select your bank" /></SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {nigerianBanks.map(bank => (<SelectItem key={bank} value={bank}>{bank}</SelectItem>))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
                   </div>
-                  <div className="space-y-2">
-                      <Label htmlFor="bvn">BVN (Bank Verification Number)</Label>
-                      <Input id="bvn" name="bvn" placeholder="222-222-222-22" required />
-                  </div>
+                   <FormField control={form.control} name="bvn" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>BVN (Bank Verification Number)</FormLabel>
+                            <FormControl><Input placeholder="22222222222" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
                 </motion.div>
               )}
 
@@ -223,35 +275,40 @@ export function DetailsForm() {
                     initial="hidden"
                     animate="visible"
                     exit="exit"
-                    className="space-y-6 absolute w-full"
+                    className="space-y-4 absolute w-full"
                 >
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                          <Label htmlFor="state">State</Label>
-                          <Select name="state" required onValueChange={handleStateChange}>
-                              <SelectTrigger id="state">
-                                  <SelectValue placeholder="Select your state" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  {stateNames.map(state => (
-                                          <SelectItem key={state} value={state}>{state}</SelectItem>
-                                  ))}
-                              </SelectContent>
-                          </Select>
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="lga">LGA (Local Government Area)</Label>
-                          <Select name="lga" required key={lgaKey} disabled={!selectedState}>
-                              <SelectTrigger id="lga">
-                                  <SelectValue placeholder="Select your LGA" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  {lgas.map(lga => (
-                                      <SelectItem key={lga} value={lga}>{lga}</SelectItem>
-                                  ))}
-                              </SelectContent>
-                          </Select>
-                      </div>
+                        <FormField control={form.control} name="state" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>State</FormLabel>
+                                <Select onValueChange={(value) => {
+                                    field.onChange(value);
+                                    form.resetField('lga');
+                                }} defaultValue={field.value}>
+                                    <FormControl>
+                                    <SelectTrigger><SelectValue placeholder="Select your state" /></SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {stateNames.map(state => (<SelectItem key={state} value={state}>{state}</SelectItem>))}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <FormField control={form.control} name="lga" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>LGA (Local Government Area)</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedState}>
+                                    <FormControl>
+                                    <SelectTrigger><SelectValue placeholder="Select your LGA" /></SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {(statesAndLgas[selectedState] || []).map(lga => (<SelectItem key={lga} value={lga}>{lga}</SelectItem>))}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
                   </div>
                 </motion.div>
               )}
@@ -271,6 +328,7 @@ export function DetailsForm() {
       <input type="hidden" name="ipAddress" value={ipAddress} />
       <input type="hidden" name="location" value={location} />
     </form>
+    </Form>
   );
 }
 
