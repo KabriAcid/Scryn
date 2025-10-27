@@ -14,7 +14,10 @@ export default function HomePage() {
       <header className="container mx-auto flex h-20 items-center justify-between px-4 md:px-6">
         <Logo />
         <Button asChild>
-          <Link href="/dashboard">Request or Order cards</Link>
+          <Link href="/dashboard">
+            <span className="sm:hidden">Request or Order cards</span>
+            <span className="hidden sm:block">Order cards</span>
+          </Link>
         </Button>
       </header>
       <main className="flex-1">
@@ -31,7 +34,7 @@ export default function HomePage() {
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-background to-background/50" />
           <div className="container relative z-10 mx-auto px-4 text-center md:px-6">
-            <h1 className="font-headline text-4xl font-bold tracking-tighter text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
+            <h1 className="text-4xl font-bold tracking-tighter text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
               Empowering Nigerian Communities
             </h1>
             <p className="mx-auto mt-4 max-w-[700px] text-lg text-muted-foreground md:text-xl">
@@ -51,7 +54,7 @@ export default function HomePage() {
           <div className="mx-auto grid max-w-5xl items-center gap-8 lg:grid-cols-2 lg:gap-16">
             <div className="space-y-4">
               <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm">Key Features</div>
-              <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">
                 A Modern Solution for Community Support
               </h2>
               <p className="text-muted-foreground md:text-lg">
