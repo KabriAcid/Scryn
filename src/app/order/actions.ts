@@ -4,8 +4,9 @@ import { z } from 'zod';
 import { redirect } from 'next/navigation';
 
 const OrderSchema = z.object({
+  title: z.string().min(1, 'Title is required.'),
   politicianName: z.string().min(3, 'Name must be at least 3 characters.'),
-  politicalParty: z.string().min(2, 'Political party must be at least 2 characters.'),
+  politicalParty: z.string().min(2, 'Political party is required.'),
   // Photo validation will be handled client-side for now.
   denomination: z.string().refine(val => !isNaN(parseInt(val, 10)), {
     message: "Please select a denomination.",
@@ -15,6 +16,7 @@ const OrderSchema = z.object({
 
 export async function createOrder(prevState: any, formData: FormData) {
   const validatedFields = OrderSchema.safeParse({
+    title: formData.get('title'),
     politicianName: formData.get('politicianName'),
     politicalParty: formData.get('politicalParty'),
     denomination: formData.get('denomination'),

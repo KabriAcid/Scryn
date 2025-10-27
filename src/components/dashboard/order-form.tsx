@@ -15,9 +15,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { cn } from '@/lib/utils';
 
+const politicalParties = ["ACN", "PDP", "APC", "LP", "NNPP", "APGA"];
+const titles = ["Hon.", "Chief", "Dr.", "Mr.", "Mrs.", "Ms."];
+
 const OrderSchema = z.object({
+  title: z.string({ required_error: 'Please select a title.' }),
   politicianName: z.string().min(3, 'Name must be at least 3 characters.'),
-  politicalParty: z.string().min(2, 'Political party must be at least 2 characters.'),
+  politicalParty: z.string({ required_error: "Please select a political party." }),
   photo: z.any().refine(file => file instanceof File, 'A photo is required.'),
   denomination: z.string().refine(val => !isNaN(parseInt(val, 10)), {
     message: "Please select a denomination.",
@@ -28,7 +32,7 @@ const OrderSchema = z.object({
 type OrderFormValues = z.infer<typeof OrderSchema>;
 
 const STEPS = [
-  { id: 1, title: 'Card Customization', fields: ['politicianName', 'politicalParty', 'photo'] as const, icon: User },
+  { id: 1, title: 'Card Customization', fields: ['title', 'politicianName', 'politicalParty', 'photo'] as const, icon: User },
   { id: 2, title: 'Card Details', fields: ['denomination', 'quantity'] as const, icon: Wallet },
 ];
 
@@ -143,7 +147,7 @@ export function OrderForm() {
           ))}
         </div>
 
-        <div className="relative h-[380px] overflow-hidden">
+        <div className="relative h-[440px] overflow-hidden">
           <AnimatePresence initial={false} custom={direction} mode="wait">
             {step === 1 && (
               <motion.div
@@ -155,17 +159,44 @@ export function OrderForm() {
                 exit="exit"
                 className="space-y-4 absolute w-full"
               >
-                <FormField control={form.control} name="politicianName" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name (to be printed on card)</FormLabel>
-                    <FormControl><Input placeholder="Hon. John Doe" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                 <div className="grid grid-cols-[1fr_2fr] gap-4">
+                    <FormField control={form.control} name="title" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Title</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Title" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {titles.map(title => <SelectItem key={title} value={title}>{title}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="politicianName" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name (on card)</FormLabel>
+                        <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
                 <FormField control={form.control} name="politicalParty" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Political Party</FormLabel>
-                    <FormControl><Input placeholder="e.g., ACN, PDP" {...field} /></FormControl>
+                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a political party" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                         {politicalParties.map(party => <SelectItem key={party} value={party}>{party}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )} />
