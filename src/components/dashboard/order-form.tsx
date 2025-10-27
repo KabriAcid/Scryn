@@ -1,11 +1,11 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import React, { useActionState, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useFormStatus } from 'react-dom';
-import { AlertCircle, LoaderCircle, PlusCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, LoaderCircle, PartyPopper, Upload, User, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,8 +13,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { createOrder } from '@/app/order/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { cn } from '@/lib/utils';
 
 const OrderSchema = z.object({
+  politicianName: z.string().min(3, 'Politician name must be at least 3 characters.'),
+  politicalParty: z.string().min(2, 'Political party must be at least 2 characters.'),
+  photo: z.any().refine(file => file instanceof File, 'A photo is required.'),
   denomination: z.string().refine(val => !isNaN(parseInt(val, 10)), {
     message: "Please select a denomination.",
   }),
@@ -23,36 +27,49 @@ const OrderSchema = z.object({
 
 type OrderFormValues = z.infer<typeof OrderSchema>;
 
+const STEPS = [
+  { id: 1, title: 'Politician Details', fields: ['politicianName', 'politicalParty', 'photo'] as const, icon: User },
+  { id: 2, title: 'Card Details', fields: ['denomination', 'quantity'] as const, icon: Wallet },
+];
+
 const initialState = {
   message: '',
   status: 'idle' as 'idle' | 'success' | 'error',
 };
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" className="w-full sm:w-auto" disabled={pending}>
-      {pending ? (
-        <>
-          <LoaderCircle className="animate-spin" />
-          Placing Order...
-        </>
-      ) : (
-        <>
-          <PlusCircle />
-          Place Order
-        </>
-      )}
-    </Button>
-  );
-}
+const stepVariants = {
+  hidden: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? '50%' : '-50%',
+  }),
+  visible: {
+    opacity: 1,
+    x: '0%',
+    transition: {
+      duration: 0.5,
+      ease: 'easeInOut',
+    },
+  },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction < 0 ? '50%' : '-50%',
+    transition: {
+      duration: 0.5,
+      ease: 'easeInOut',
+    },
+  }),
+};
 
 export function OrderForm() {
-  const [state, formAction] = useActionState(createOrder, initialState);
+  const [state, formAction, isPending] = useActionState(createOrder, initialState);
   const { toast } = useToast();
+  const [step, setStep] = useState(1);
+  const [direction, setDirection] = useState(1);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(OrderSchema),
+    mode: 'onTouched',
     defaultValues: {
       quantity: 1000,
     },
@@ -68,55 +85,183 @@ export function OrderForm() {
     }
   }, [state, toast]);
 
+  const nextStep = async () => {
+    const fields = STEPS[step - 1].fields;
+    const output = await form.trigger(fields, { shouldFocus: true });
+    if (!output) return;
+
+    setDirection(1);
+    setStep(prev => (prev < STEPS.length ? prev + 1 : prev));
+  };
+
+  const prevStep = () => {
+    setDirection(-1);
+    setStep(prev => (prev > 1 ? prev - 1 : prev));
+  };
+  
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      form.setValue('photo', file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <Form {...form}>
-      <form action={formAction} className="space-y-6 max-w-lg">
+      <form action={formAction} className="space-y-6 max-w-lg mx-auto">
         {state.status === 'error' && state.message && (
             <Alert variant="destructive">
-                <AlertCircle />
+                <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Error</AlertTitle>
                 <AlertDescription>{state.message}</AlertDescription>
             </Alert>
         )}
-        <FormField
-          control={form.control}
-          name="denomination"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Card Denomination (₦)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a denomination" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="1000">1,000</SelectItem>
-                  <SelectItem value="2000">2,000</SelectItem>
-                  <SelectItem value="5000">5,000</SelectItem>
-                  <SelectItem value="10000">10,000</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="quantity"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Quantity</FormLabel>
-              <FormControl>
-                <Input type="number" placeholder="e.g., 10000" {...field} min="100" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <SubmitButton />
+
+        {/* Step Indicators */}
+        <div className="flex items-center justify-center space-x-4">
+          {STEPS.map((s, index) => (
+            <React.Fragment key={s.id}>
+              <div className="flex flex-col items-center gap-2">
+                <div
+                  className={cn(
+                    'flex h-10 w-10 items-center justify-center rounded-full transition-colors border-2',
+                    step > s.id ? 'bg-primary border-primary text-primary-foreground' : '',
+                    step === s.id ? 'border-primary text-primary' : 'border-border bg-muted text-muted-foreground'
+                  )}
+                >
+                  {step > s.id ? <CheckCircle className="h-6 w-6" /> : <s.icon className="h-6 w-6" />}
+                </div>
+                <p className={cn("text-sm", step === s.id ? 'font-semibold text-primary' : 'text-muted-foreground')}>{s.title}</p>
+              </div>
+              {index < STEPS.length - 1 && <div className="flex-1 mt-[-20px] border-t-2 border-dashed border-border" />}
+            </React.Fragment>
+          ))}
+        </div>
+
+        <div className="relative h-[380px] overflow-hidden">
+          <AnimatePresence initial={false} custom={direction} mode="wait">
+            {step === 1 && (
+              <motion.div
+                key={1}
+                custom={direction}
+                variants={stepVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="space-y-4 absolute w-full"
+              >
+                <FormField control={form.control} name="politicianName" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Politician&apos;s Full Name</FormLabel>
+                    <FormControl><Input placeholder="Hon. John Doe" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="politicalParty" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Political Party</FormLabel>
+                    <FormControl><Input placeholder="e.g., ACN, PDP" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                 <FormField control={form.control} name="photo" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Politician&apos;s Photo</FormLabel>
+                        <FormControl>
+                            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted">
+                                {photoPreview ? (
+                                    <img src={photoPreview} alt="Preview" className="h-full w-full object-contain rounded-lg" />
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center pt-5 pb-6 text-muted-foreground">
+                                        <Upload className="w-8 h-8 mb-2" />
+                                        <p className="mb-2 text-sm">Click to upload photo</p>
+                                        <p className="text-xs">PNG, JPG (MAX. 800x400px)</p>
+                                    </div>
+                                )}
+                                <Input type="file" className="hidden" accept="image/png, image/jpeg" onChange={handlePhotoChange} />
+                            </label>
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+              </motion.div>
+            )}
+
+            {step === 2 && (
+              <motion.div
+                key={2}
+                custom={direction}
+                variants={stepVariants}
+                initial="hidden"
+animate="visible"
+                exit="exit"
+                className="space-y-4 absolute w-full"
+              >
+                <FormField control={form.control} name="denomination" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Card Denomination (₦)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a denomination" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="1000">1,000</SelectItem>
+                        <SelectItem value="2000">2,000</SelectItem>
+                        <SelectItem value="5000">5,000</SelectItem>
+                        <SelectItem value="10000">10,000</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="quantity" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantity</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g., 10000" {...field} min="100" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        
+        <div className="flex justify-between pt-2">
+            {step > 1 ? (
+              <Button type="button" variant="outline" onClick={prevStep}><ArrowLeft /> Previous</Button>
+            ) : <div />}
+            {step < STEPS.length && <Button type="button" onClick={nextStep} className="ml-auto">Next <ArrowRight /></Button>}
+            {step === STEPS.length && <SubmitButton pending={isPending} />}
+        </div>
       </form>
     </Form>
+  );
+}
+
+
+function SubmitButton({ pending }: { pending: boolean }) {
+  return (
+    <Button type="submit" className="w-full sm:w-auto ml-auto" disabled={pending}>
+      {pending ? (
+        <>
+          <LoaderCircle className="animate-spin" />
+          Placing Order...
+        </>
+      ) : (
+        <>
+          <PartyPopper />
+          Place Order
+        </>
+      )}
+    </Button>
   );
 }
