@@ -23,12 +23,12 @@ export function DenominationPicker({ field, denominations }: DenominationPickerP
   };
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
       {denominations.map((item) => (
         <label
           key={item.id}
           className={cn(
-            'flex cursor-pointer flex-col items-center justify-center rounded-md border-2 bg-card p-3 text-center text-card-foreground transition-all hover:bg-accent/50',
+            'flex cursor-pointer flex-col items-center justify-center rounded-md border-2 bg-card p-2 text-center text-card-foreground transition-all hover:bg-accent/50 w-fit',
             field.value?.includes(item.id) && 'border-primary bg-primary/10 text-primary'
           )}
         >
@@ -39,7 +39,7 @@ export function DenominationPicker({ field, denominations }: DenominationPickerP
             checked={field.value?.includes(item.id)}
             onChange={() => handleToggle(item.id)}
           />
-          <span className="text-lg font-semibold">{item.label}</span>
+          <span className="text-base font-semibold px-2">{item.label}</span>
         </label>
       ))}
     </div>

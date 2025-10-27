@@ -20,9 +20,18 @@ const politicalParties = ["ACN", "PDP", "APC", "LP", "NNPP", "APGA"];
 const titles = ["Hon.", "Chief", "Dr.", "Mr.", "Mrs.", "Ms."];
 
 const denominations = [
-  { id: '2000', label: '₦2,000' },
-  { id: '5000', label: '₦5,000' },
-  { id: '10000', label: '₦10,000' },
+  { id: '2000', label: '₦2k' },
+  { id: '5000', label: '₦5k' },
+  { id: '10000', label: '₦10k' },
+  { id: '20000', label: '₦20k' },
+  { id: '50000', label: '₦50k' },
+  { id: '100000', label: '₦100k' },
+  { id: '200000', label: '₦200k' },
+  { id: '500000', label: '₦500k' },
+  { id: '1000000', label: '₦1M' },
+  { id: '2000000', label: '₦2M' },
+  { id: '5000000', label: '₦5M' },
+  { id: '10000000', label: '₦10M' },
 ] as const;
 
 const OrderSchema = z.object({
