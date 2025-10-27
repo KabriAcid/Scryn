@@ -159,8 +159,8 @@ export function OrderForm() {
 
   const selectedDenominations = fields.map(f => f.denomination);
   
-  const totalQuantity = form.watch('orderItems').reduce((acc, item) => acc + (item.quantity || 0), 0);
-  const totalValue = form.watch('orderItems').reduce((acc, item) => acc + (parseInt(item.denomination) * (item.quantity || 0)), 0);
+  const totalQuantity = form.watch('orderItems').reduce((acc, item) => acc + (Number(item.quantity) || 0), 0);
+  const totalValue = form.watch('orderItems').reduce((acc, item) => acc + (parseInt(item.denomination) * (Number(item.quantity) || 0)), 0);
 
   return (
     <Form {...form}>
@@ -198,164 +198,160 @@ export function OrderForm() {
           ))}
         </div>
 
-        <div className="relative min-h-[450px] overflow-hidden">
+        <div className="relative h-[450px] overflow-hidden">
           <AnimatePresence initial={false} custom={direction} mode="wait">
-            {step === 1 && (
-              <motion.div
-                key={1}
-                custom={direction}
-                variants={stepVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="space-y-4 absolute w-full"
-              >
-                 <div className="grid grid-cols-[1fr_2fr] gap-4">
-                    <FormField control={form.control} name="title" render={({ field }) => (
+            <motion.div
+              key={step}
+              custom={direction}
+              variants={stepVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="absolute w-full h-full"
+            >
+              <div className="h-full overflow-y-auto pr-2 space-y-4">
+                {step === 1 && (
+                  <>
+                    <div className="grid grid-cols-[1fr_2fr] gap-4">
+                      <FormField control={form.control} name="title" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Title</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Title" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {titles.map(title => <SelectItem key={title} value={title}>{title}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="politicianName" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name (on card)</FormLabel>
+                          <FormControl><Input placeholder="John Doe" {...field} name="politicianName" /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+                    <FormField control={form.control} name="politicalParty" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Title</FormLabel>
+                        <FormLabel>Political Party</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Title" />
+                              <SelectValue placeholder="Select a political party" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {titles.map(title => <SelectItem key={title} value={title}>{title}</SelectItem>)}
+                            {politicalParties.map(party => <SelectItem key={party} value={party}>{party}</SelectItem>)}
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )} />
-                    <FormField control={form.control} name="politicianName" render={({ field }) => (
+                    <FormField control={form.control} name="photo" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name (on card)</FormLabel>
-                        <FormControl><Input placeholder="John Doe" {...field} name="politicianName" /></FormControl>
-                        <FormMessage />
+                          <FormLabel>Photo for Card</FormLabel>
+                          <FormControl>
+                              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted">
+                                  {photoPreview ? (
+                                      <img src={photoPreview} alt="Preview" className="h-full w-full object-contain rounded-lg" />
+                                  ) : (
+                                      <div className="flex flex-col items-center justify-center pt-5 pb-6 text-muted-foreground">
+                                          <Upload className="w-8 h-8 mb-2" />
+                                          <p className="mb-2 text-sm">Click to upload photo</p>
+                                          <p className="text-xs">PNG, JPG (MAX. 800x400px)</p>
+                                      </div>
+                                  )}
+                                  <Input type="file" className="hidden" accept="image/png, image/jpeg" onChange={handlePhotoChange} name="photo" />
+                              </label>
+                          </FormControl>
+                          <FormMessage />
                       </FormItem>
                     )} />
-                  </div>
-                <FormField control={form.control} name="politicalParty" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Political Party</FormLabel>
-                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a political party" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                         {politicalParties.map(party => <SelectItem key={party} value={party}>{party}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                 <FormField control={form.control} name="photo" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Photo for Card</FormLabel>
-                        <FormControl>
-                            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted">
-                                {photoPreview ? (
-                                    <img src={photoPreview} alt="Preview" className="h-full w-full object-contain rounded-lg" />
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center pt-5 pb-6 text-muted-foreground">
-                                        <Upload className="w-8 h-8 mb-2" />
-                                        <p className="mb-2 text-sm">Click to upload photo</p>
-                                        <p className="text-xs">PNG, JPG (MAX. 800x400px)</p>
-                                    </div>
-                                )}
-                                <Input type="file" className="hidden" accept="image/png, image/jpeg" onChange={handlePhotoChange} name="photo" />
-                            </label>
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )} />
-              </motion.div>
-            )}
+                  </>
+                )}
 
-            {step === 2 && (
-              <motion.div
-                key={2}
-                custom={direction}
-                variants={stepVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="space-y-4 absolute w-full"
-              >
-                <div className="space-y-2">
-                    <FormLabel className="text-base">Card Denomination (₦)</FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                        Select one or more denominations for this order.
-                    </p>
-                </div>
-
-                <DenominationPicker
-                    denominations={denominations}
-                    selected={selectedDenominations}
-                    onToggle={handleDenominationToggle}
-                />
-                
-                {fields.length > 0 && (
-                    <div className="space-y-3 pt-4">
-                         <h3 className="font-medium text-lg">Selected Cards</h3>
-                         <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-                            {fields.map((field, index) => {
-                                const denomination = denominations.find(d => d.id === field.denomination);
-                                return (
-                                    <Card key={field.id} className="p-3 flex items-center justify-between">
-                                        <div className='font-semibold'>{denomination?.label} cards</div>
-                                        <div className="flex items-center gap-2">
-                                            <FormField
-                                                control={form.control}
-                                                name={`orderItems.${index}.quantity`}
-                                                render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormControl>
-                                                            <QuantityInput {...field} />
-                                                        </FormControl>
-                                                        <FormMessage className="text-xs" />
-                                                    </FormItem>
-                                                )}
-                                                />
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </Button>
-                                        </div>
-                                    </Card>
-                                )
-                            })}
-                         </div>
+                {step === 2 && (
+                  <>
+                    <div className="space-y-2">
+                        <FormLabel className="text-base">Card Denomination (₦)</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                            Select one or more denominations for this order.
+                        </p>
                     </div>
-                )}
-                
-                <AnimatePresence>
-                    {form.formState.errors.orderItems && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                        >
-                            <FormMessage>{form.formState.errors.orderItems.message || form.formState.errors.orderItems.root?.message}</FormMessage>
-                        </motion.div>
+
+                    <DenominationPicker
+                        denominations={denominations}
+                        selected={selectedDenominations}
+                        onToggle={handleDenominationToggle}
+                    />
+                    
+                    {fields.length > 0 && (
+                        <div className="space-y-3 pt-4">
+                            <h3 className="font-medium text-lg">Selected Cards</h3>
+                            <div className="space-y-2">
+                                {fields.map((field, index) => {
+                                    const denomination = denominations.find(d => d.id === field.denomination);
+                                    return (
+                                        <Card key={field.id} className="p-3 flex items-center justify-between">
+                                            <div className='font-semibold'>{denomination?.label} cards</div>
+                                            <div className="flex items-center gap-2">
+                                                <FormField
+                                                    control={form.control}
+                                                    name={`orderItems.${index}.quantity`}
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormControl>
+                                                                <QuantityInput {...field} />
+                                                            </FormControl>
+                                                            <FormMessage className="text-xs" />
+                                                        </FormItem>
+                                                    )}
+                                                    />
+                                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
+                                            </div>
+                                        </Card>
+                                    )
+                                })}
+                            </div>
+                        </div>
                     )}
-                </AnimatePresence>
-                
-                {fields.length > 0 && (
-                    <Card className="p-4 mt-4 bg-muted/50">
-                        <div className="flex justify-between items-center">
-                            <span className="font-semibold">Total Quantity:</span>
-                            <span className="font-bold text-lg">{totalQuantity.toLocaleString()}</span>
-                        </div>
-                         <div className="flex justify-between items-center mt-2">
-                            <span className="font-semibold">Total Value:</span>
-                            <span className="font-bold text-lg text-primary">₦{totalValue.toLocaleString()}</span>
-                        </div>
-                    </Card>
+                    
+                    <AnimatePresence>
+                        {form.formState.errors.orderItems && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                            >
+                                <FormMessage>{form.formState.errors.orderItems.message || form.formState.errors.orderItems.root?.message}</FormMessage>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                    
+                    {fields.length > 0 && (
+                        <Card className="p-4 mt-4 bg-muted/50">
+                            <div className="flex justify-between items-center">
+                                <span className="font-semibold">Total Quantity:</span>
+                                <span className="font-bold text-lg">{totalQuantity.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between items-center mt-2">
+                                <span className="font-semibold">Total Value:</span>
+                                <span className="font-bold text-lg text-primary">₦{totalValue.toLocaleString()}</span>
+                            </div>
+                        </Card>
+                    )}
+                  </>
                 )}
-              </motion.div>
-            )}
+              </div>
+            </motion.div>
           </AnimatePresence>
         </div>
         
