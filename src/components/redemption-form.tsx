@@ -11,6 +11,7 @@ import { redeemCard } from '@/app/actions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -37,15 +38,25 @@ const initialState = {
 
 export function RedemptionForm() {
   const [state, formAction] = useFormState(redeemCard, initialState);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (state?.status === 'error' && state.message) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: state.message,
+      });
+    }
+    // No need to handle success toast here, as we will be redirecting
+  }, [state, toast]);
 
   return (
     <form action={formAction} className="space-y-6">
-       {state.status !== 'idle' && state.message && (
-        <Alert variant={state.status === 'error' ? 'destructive' : 'default'} className={cn(
-          {'bg-green-100/50 border-green-400 text-green-800 dark:bg-green-900/20 dark:border-green-600 dark:text-green-300': state.status === 'success'}
-        )}>
-           {state.status === 'success' ? <CheckCircle /> : <AlertCircle />}
-          <AlertTitle>{state.status === 'success' ? 'Success!' : 'Error'}</AlertTitle>
+       {state?.status === 'error' && state.message && (
+        <Alert variant={'destructive'}>
+           <AlertCircle />
+          <AlertTitle>Error</AlertTitle>
           <AlertDescription>
             {state.message}
           </AlertDescription>

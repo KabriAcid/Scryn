@@ -1,6 +1,7 @@
 'use server';
 
 import { z } from 'zod';
+import { redirect } from 'next/navigation';
 
 const RedemptionSchema = z.object({
   cardCode: z.string().min(1, 'Card code is required.'),
@@ -35,10 +36,20 @@ export async function redeemCard(prevState: any, formData: FormData) {
     };
   }
 
-  // Business logic for Scryn card goes here
+  // Business logic for Scryn card goes here.
+  // On success, we redirect to the details page.
+  redirect('/redeem/details');
 
+  // We won't return a success message here anymore since we are redirecting.
+}
+
+export async function submitDetails(prevState: any, formData: FormData) {
+  // Add validation and submission logic for bank details here.
+  console.log('Submitting bank details...');
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
   return {
     status: 'success',
-    message: 'Your redemption was successful! Funds will be credited to your account shortly.',
-  };
+    message: 'Your details have been submitted successfully! Funds will be credited shortly.'
+  }
 }
