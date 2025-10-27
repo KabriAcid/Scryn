@@ -32,7 +32,6 @@ export async function createOrder(prevState: any, formData: FormData) {
     quantity: validatedFields.data.quantity,
   });
 
-  // On success, redirect back to the orders page.
-  redirect('/dashboard/orders');
-
+  // On success, redirect to the dashboard.
+  redirect('/dashboard');
 }

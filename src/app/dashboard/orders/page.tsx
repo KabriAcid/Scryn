@@ -24,7 +24,7 @@ export default function OrdersPage() {
           <CardDescription>Manage your scratch card orders.</CardDescription>
         </div>
         <Button asChild>
-          <Link href="/dashboard/orders/new">
+          <Link href="/order">
             <PlusCircle className="mr-2 h-4 w-4" />
             Create New Order
           </Link>
