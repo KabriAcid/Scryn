@@ -59,18 +59,19 @@ const OrderSchema = z.object({
     quantity: z.coerce.number().min(1, "Min 1"),
   })).min(1, 'You must select at least one denomination and set a quantity.')
   .refine(items => {
+    const totalQuantity = items.reduce((acc, item) => acc + item.quantity, 0);
+    return totalQuantity >= 100;
+  }, {
+    message: 'Total quantity for the order must be at least 100 cards.',
+    path: ['orderItems'],
+  })
+  .refine(items => {
     const item2k = items.find(item => item.denomination === '2000');
     return !item2k || item2k.quantity >= 100;
   }, {
     message: 'Quantity for ₦2k cards must be at least 100.',
     path: ['orderItems'],
   })
-}).refine(data => {
-    const totalQuantity = data.orderItems.reduce((acc, item) => acc + item.quantity, 0);
-    return totalQuantity >= 100;
-}, {
-    message: 'Total quantity for the order must be at least 100 cards.',
-    path: ['orderItems'],
 });
 
 
@@ -122,6 +123,7 @@ export function OrderForm() {
     mode: 'onChange',
     defaultValues: {
       orderItems: [],
+      politicianName: '',
       state: undefined,
       lga: undefined,
     },
@@ -282,20 +284,19 @@ export function OrderForm() {
                       <FormItem>
                           <FormLabel>Photo for Card</FormLabel>
                           <FormControl>
-                              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted">
+                              <label className="flex flex-col items-center justify-center w-32 h-32 mx-auto border-2 border-dashed rounded-full cursor-pointer hover:bg-muted">
                                   {photoPreview ? (
-                                      <img src={photoPreview} alt="Preview" className="h-full w-full object-contain rounded-lg" />
+                                      <img src={photoPreview} alt="Preview" className="h-full w-full object-cover rounded-full" />
                                   ) : (
-                                      <div className="flex flex-col items-center justify-center pt-5 pb-6 text-muted-foreground">
+                                      <div className="flex flex-col items-center justify-center pt-5 pb-6 text-muted-foreground text-center">
                                           <Upload className="w-8 h-8 mb-2" />
-                                          <p className="mb-2 text-sm">Click to upload photo</p>
-                                          <p className="text-xs">PNG, JPG (MAX. 800x400px)</p>
+                                          <p className="mb-2 text-sm">Upload photo</p>
                                       </div>
                                   )}
                                   <Input type="file" className="hidden" accept="image/png, image/jpeg" onChange={handlePhotoChange} name="photo" />
                               </label>
                           </FormControl>
-                          <FormMessage />
+                          <FormMessage className="text-center" />
                       </FormItem>
                     )} />
                   </>
@@ -325,7 +326,7 @@ export function OrderForm() {
                                     const is2kCard = field.denomination === '2000';
                                     const minQuantity = is2kCard ? 100 : 1;
                                     return (
-                                        <Card key={field.id} className="p-3 flex items-center justify-between">
+                                        <Card key={field.customId} className="p-3 flex items-center justify-between">
                                             <div className='font-semibold'>{denomination?.label} cards</div>
                                             <div className="flex items-center gap-2">
                                                 <FormField
@@ -407,7 +408,7 @@ export function OrderForm() {
                           <FormField control={form.control} name="lga" render={({ field }) => (
                               <FormItem>
                                   <FormLabel>LGA (Local Government Area)</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value} disabled={!selectedState}>
+                                  <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={!selectedState}>
                                       <FormControl>
                                       <SelectTrigger><SelectValue placeholder="Select your LGA" /></SelectTrigger>
                                       </FormControl>
