@@ -60,6 +60,14 @@ const nigerianBanks = [
     "Zenith Bank"
 ];
 
+const statesAndLgas: Record<string, string[]> = {
+  'Abuja (FCT)': ['Abuja Municipal', 'Bwari', 'Gwagwalada', 'Kuje', 'Kwali'],
+  'Lagos': ['Agege', 'Ikeja', 'Kosofe', 'Mushin', 'Oshodi-Isolo'],
+  'Rivers': ['Port Harcourt', 'Obio-Akpor', 'Eleme', 'Ikwerre', 'Oyigbo'],
+  'Kano': ['Kano Municipal', 'Fagge', 'Dala', 'Gwale', 'Tarauni'],
+  'Oyo': ['Ibadan North', 'Ibadan South-West', 'Ibadan North-West', 'Ibadan North-East', 'Ibadan South-East' ]
+};
+const stateNames = Object.keys(statesAndLgas);
 
 const initialState = {
   message: '',
@@ -70,10 +78,11 @@ export function DetailsForm() {
   const [state, formAction] = useFormState(submitDetails, initialState);
   const [ipAddress, setIpAddress] = useState('');
   const [location, setLocation] = useState('');
-
+  const [selectedState, setSelectedState] = useState('');
+  const [lgas, setLgas] = useState<string[]>([]);
+  const [lgaKey, setLgaKey] = useState(0);
 
   useEffect(() => {
-    // Fetch IP and location
     fetch('https://ipapi.co/json/')
       .then(res => res.json())
       .then(data => {
@@ -87,6 +96,11 @@ export function DetailsForm() {
       })
   }, []);
 
+  const handleStateChange = (state: string) => {
+    setSelectedState(state);
+    setLgas(statesAndLgas[state] || []);
+    setLgaKey(prev => prev + 1); // Reset LGA select
+  };
 
   return (
     <form action={formAction} className="space-y-6">
@@ -143,11 +157,29 @@ export function DetailsForm() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
                 <Label htmlFor="state">State</Label>
-                <Input id="state" name="state" placeholder="Lagos" required />
+                 <Select name="state" required onValueChange={handleStateChange}>
+                    <SelectTrigger id="state">
+                        <SelectValue placeholder="Select your state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {stateNames.map(state => (
+                                <SelectItem key={state} value={state}>{state}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
              <div className="space-y-2">
                 <Label htmlFor="lga">LGA (Local Government Area)</Label>
-                <Input id="lga" name="lga" placeholder="Ikeja" required />
+                <Select name="lga" required key={lgaKey} disabled={!selectedState}>
+                    <SelectTrigger id="lga">
+                        <SelectValue placeholder="Select your LGA" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {lgas.map(lga => (
+                            <SelectItem key={lga} value={lga}>{lga}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
         </div>
 
