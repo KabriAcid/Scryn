@@ -80,7 +80,7 @@ export function OrderForm() {
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(OrderSchema),
-    mode: 'onTouched',
+    mode: 'onChange',
     defaultValues: {
       quantity: 1000,
       denomination: [],
@@ -187,7 +187,7 @@ export function OrderForm() {
                     <FormField control={form.control} name="politicianName" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Full Name (on card)</FormLabel>
-                        <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
+                        <FormControl><Input placeholder="John Doe" {...field} name="politicianName" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
