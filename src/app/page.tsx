@@ -15,7 +15,7 @@ export default function HomePage() {
         <Logo />
         <Button asChild>
           <Link href="/dashboard">
-            <span className="sm:hidden">Request or Order cards</span>
+            <span className="sm:hidden">Request / Order</span>
             <span className="hidden sm:block">Order cards</span>
           </Link>
         </Button>
@@ -43,7 +43,7 @@ export default function HomePage() {
             <div className='mt-8'>
                 <Button asChild size="lg">
                     <Link href="/redeem">
-                        Redeem Your Card <ArrowRight className="ml-2" />
+                        Redeem Your Card
                     </Link>
                 </Button>
             </div>
