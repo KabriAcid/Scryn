@@ -1,8 +1,8 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormState } from 'react-dom';
 import { useEffect, useState } from 'react';
-import { AlertCircle, ArrowRight, CheckCircle, LoaderCircle } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, LoaderCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,48 +16,14 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? (
-        <>
-          <LoaderCircle className="animate-spin" />
-          Submitting...
-        </>
-      ) : (
-        <>
-          Complete Redemption <ArrowRight />
-        </>
-      )}
-    </Button>
-  );
-}
+} from "@/components/ui/select";
 
 const nigerianBanks = [
-    "Access Bank",
-    "Citibank",
-    "Ecobank Nigeria",
-    "Fidelity Bank Nigeria",
-    "First Bank of Nigeria",
-    "First City Monument Bank",
-    "Guaranty Trust Bank",
-    "Jaiz Bank",
-    "Keystone Bank Limited",
-    "Polaris Bank",
-    "Stanbic IBTC Bank Nigeria",
-    "Standard Chartered Bank",
-    "Sterling Bank",
-    "SunTrust Bank Nigeria",
-    "TAJBank",
-    "Union Bank of Nigeria",
-    "United Bank for Africa",
-    "Unity Bank Plc",
-    "Wema Bank",
-    "Zenith Bank"
+    "Access Bank", "Citibank", "Ecobank Nigeria", "Fidelity Bank Nigeria", "First Bank of Nigeria",
+    "First City Monument Bank", "Guaranty Trust Bank", "Jaiz Bank", "Keystone Bank Limited",
+    "Polaris Bank", "Stanbic IBTC Bank Nigeria", "Standard Chartered Bank", "Sterling Bank",
+    "SunTrust Bank Nigeria", "TAJBank", "Union Bank of Nigeria", "United Bank for Africa",
+    "Unity Bank Plc", "Wema Bank", "Zenith Bank"
 ];
 
 const statesAndLgas: Record<string, string[]> = {
@@ -74,8 +40,16 @@ const initialState = {
   status: 'idle' as 'idle' | 'success' | 'error',
 };
 
+const STEPS = [
+  { id: 1, title: 'Personal Info' },
+  { id: 2, title: 'Bank Details' },
+  { id: 3, title: 'Location' },
+];
+
 export function DetailsForm() {
   const [state, formAction] = useFormState(submitDetails, initialState);
+  const [step, setStep] = useState(1);
+
   const [ipAddress, setIpAddress] = useState('');
   const [location, setLocation] = useState('');
   const [selectedState, setSelectedState] = useState('');
@@ -101,10 +75,13 @@ export function DetailsForm() {
     setLgas(statesAndLgas[state] || []);
     setLgaKey(prev => prev + 1); // Reset LGA select
   };
+  
+  const nextStep = () => setStep(prev => (prev < STEPS.length ? prev + 1 : prev));
+  const prevStep = () => setStep(prev => (prev > 1 ? prev - 1 : prev));
 
   return (
-    <form action={formAction} className="space-y-6">
-       {state.status !== 'idle' && state.message && (
+    <form action={formAction} className="space-y-8">
+      {state.status !== 'idle' && state.message && (
         <Alert variant={state.status === 'error' ? 'destructive' : 'default'} className={cn(
           {'bg-green-100/50 border-green-400 text-green-800 dark:bg-green-900/20 dark:border-green-600 dark:text-green-300': state.status === 'success'}
         )}>
@@ -118,88 +95,141 @@ export function DetailsForm() {
 
       {state.status !== 'success' && (
         <>
-        <div className="space-y-2">
-            <Label htmlFor="account-name">Full Name (as on bank account)</Label>
-            <Input id="account-name" name="accountName" placeholder="John Doe" required />
-        </div>
+          {/* Step Indicators */}
+          <div className="flex items-center justify-center space-x-4">
+            {STEPS.map((s, index) => (
+              <React.Fragment key={s.id}>
+                <div className="flex flex-col items-center">
+                  <div
+                    className={cn(
+                      'flex h-8 w-8 items-center justify-center rounded-full transition-colors',
+                      step > s.id ? 'bg-primary text-primary-foreground' : '',
+                      step === s.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    )}
+                  >
+                   {step > s.id ? <CheckCircle className="h-5 w-5" /> : s.id}
+                  </div>
+                  <p className={cn("mt-2 text-sm", step === s.id ? 'font-semibold text-primary' : 'text-muted-foreground')}>{s.title}</p>
+                </div>
+                {index < STEPS.length - 1 && <div className="flex-1 border-t-2 border-dashed border-border" />}
+              </React.Fragment>
+            ))}
+          </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" name="email" type="email" placeholder="you@example.com" required />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" name="phone" type="tel" placeholder="08012345678" required />
-            </div>
-        </div>
+          <div className="space-y-6">
+            {step === 1 && (
+              <div className="space-y-6 animate-in fade-in">
+                <div className="space-y-2">
+                    <Label htmlFor="account-name">Full Name (as on bank account)</Label>
+                    <Input id="account-name" name="accountName" placeholder="John Doe" required />
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                        <Label htmlFor="email">Email Address</Label>
+                        <Input id="email" name="email" type="email" placeholder="you@example.com" required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <Input id="phone" name="phone" type="tel" placeholder="08012345678" required />
+                    </div>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="nin">NIN (National Identification Number)</Label>
+                    <Input id="nin" name="nin" placeholder="111-111-111-11" required />
+                </div>
+              </div>
+            )}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-                <Label htmlFor="account-number">Bank Account Number</Label>
-                <Input id="account-number" name="accountNumber" placeholder="0123456789" required />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="bank-name">Bank Name</Label>
-                 <Select name="bankName" required>
-                    <SelectTrigger id="bank-name">
-                        <SelectValue placeholder="Select your bank" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {nigerianBanks.map(bank => (
-                             <SelectItem key={bank} value={bank}>{bank}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-        </div>
+            {step === 2 && (
+              <div className="space-y-6 animate-in fade-in">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                        <Label htmlFor="account-number">Bank Account Number</Label>
+                        <Input id="account-number" name="accountNumber" placeholder="0123456789" required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="bank-name">Bank Name</Label>
+                         <Select name="bankName" required>
+                            <SelectTrigger id="bank-name">
+                                <SelectValue placeholder="Select your bank" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {nigerianBanks.map(bank => (
+                                     <SelectItem key={bank} value={bank}>{bank}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="bvn">BVN (Bank Verification Number)</Label>
+                    <Input id="bvn" name="bvn" placeholder="222-222-222-22" required />
+                </div>
+              </div>
+            )}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-                <Label htmlFor="bvn">BVN (Bank Verification Number)</Label>
-                <Input id="bvn" name="bvn" placeholder="222-222-222-22" required />
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="nin">NIN (National Identification Number)</Label>
-                <Input id="nin" name="nin" placeholder="111-111-111-11" required />
-            </div>
-        </div>
-        
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-                <Label htmlFor="state">State</Label>
-                 <Select name="state" required onValueChange={handleStateChange}>
-                    <SelectTrigger id="state">
-                        <SelectValue placeholder="Select your state" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {stateNames.map(state => (
-                                <SelectItem key={state} value={state}>{state}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="lga">LGA (Local Government Area)</Label>
-                <Select name="lga" required key={lgaKey} disabled={!selectedState}>
-                    <SelectTrigger id="lga">
-                        <SelectValue placeholder="Select your LGA" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {lgas.map(lga => (
-                            <SelectItem key={lga} value={lga}>{lga}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-        </div>
-
-        <input type="hidden" name="ipAddress" value={ipAddress} />
-        <input type="hidden" name="location" value={location} />
-
-        <SubmitButton />
+            {step === 3 && (
+              <div className="space-y-6 animate-in fade-in">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                        <Label htmlFor="state">State</Label>
+                         <Select name="state" required onValueChange={handleStateChange}>
+                            <SelectTrigger id="state">
+                                <SelectValue placeholder="Select your state" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {stateNames.map(state => (
+                                        <SelectItem key={state} value={state}>{state}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="lga">LGA (Local Government Area)</Label>
+                        <Select name="lga" required key={lgaKey} disabled={!selectedState}>
+                            <SelectTrigger id="lga">
+                                <SelectValue placeholder="Select your LGA" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {lgas.map(lga => (
+                                    <SelectItem key={lga} value={lga}>{lga}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex justify-between">
+            {step > 1 && <Button type="button" variant="outline" onClick={prevStep}><ArrowLeft /> Previous</Button>}
+            {step < STEPS.length && <Button type="button" onClick={nextStep} className="ml-auto">Next <ArrowRight /></Button>}
+            {step === STEPS.length && <SubmitButton />}
+          </div>
         </>
       )}
+
+      <input type="hidden" name="ipAddress" value={ipAddress} />
+      <input type="hidden" name="location" value={location} />
     </form>
+  );
+}
+
+function SubmitButton() {
+  const { pending } = useFormState(submitDetails)[0];
+  return (
+    <Button type="submit" className="w-full sm:w-auto ml-auto" disabled={pending}>
+      {pending ? (
+        <>
+          <LoaderCircle className="animate-spin" />
+          Submitting...
+        </>
+      ) : (
+        <>
+          Complete Redemption <CheckCircle />
+        </>
+      )}
+    </Button>
   );
 }
