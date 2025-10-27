@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { useEffect, useState } from 'react';
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, LoaderCircle } from 'lucide-react';
 
@@ -47,7 +47,7 @@ const STEPS = [
 ];
 
 export function DetailsForm() {
-  const [state, formAction] = useFormState(submitDetails, initialState);
+  const [state, formAction, isPending] = useActionState(submitDetails, initialState);
   const [step, setStep] = useState(1);
 
   const [ipAddress, setIpAddress] = useState('');
@@ -205,7 +205,7 @@ export function DetailsForm() {
           <div className="flex justify-between">
             {step > 1 && <Button type="button" variant="outline" onClick={prevStep}><ArrowLeft /> Previous</Button>}
             {step < STEPS.length && <Button type="button" onClick={nextStep} className="ml-auto">Next <ArrowRight /></Button>}
-            {step === STEPS.length && <SubmitButton />}
+            {step === STEPS.length && <SubmitButton pending={isPending} />}
           </div>
         </>
       )}
@@ -216,8 +216,7 @@ export function DetailsForm() {
   );
 }
 
-function SubmitButton() {
-  const { pending } = useFormState(submitDetails)[0];
+function SubmitButton({ pending }: { pending: boolean }) {
   return (
     <Button type="submit" className="w-full sm:w-auto ml-auto" disabled={pending}>
       {pending ? (

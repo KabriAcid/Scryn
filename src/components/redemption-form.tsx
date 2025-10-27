@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useFormStatus } from 'react-dom';
 import { useEffect } from 'react';
 import { AlertCircle, ArrowRight, CheckCircle, LoaderCircle } from 'lucide-react';
 
@@ -37,7 +37,7 @@ const initialState = {
 };
 
 export function RedemptionForm() {
-  const [state, formAction] = useFormState(redeemCard, initialState);
+  const [state, formAction] = useActionState(redeemCard, initialState);
   const { toast } = useToast();
 
   useEffect(() => {
