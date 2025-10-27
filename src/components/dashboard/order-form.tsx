@@ -5,7 +5,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Home, LoaderCircle, Mail, PartyPopper, Phone, Trash2, Upload, User, Wallet } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Home, LoaderCircle, Mail, PartyPopper, Phone, Trash2, Upload, User, Wallet, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,6 +20,17 @@ import { Card } from '../ui/card';
 
 const politicalParties = ["ACN", "PDP", "APC", "LP", "NNPP", "APGA"];
 const titles = ["Hon.", "Chief", "Dr.", "Mr.", "Mrs.", "Ms."];
+const politicalRoles = [
+  "President",
+  "Vice President",
+  "Governor",
+  "Deputy Governor",
+  "Senator",
+  "House of Reps Member",
+  "State Assembly Member",
+  "Local Government Chairman",
+  "Councillor",
+];
 
 const statesAndLgas: Record<string, string[]> = {
   'Abuja (FCT)': ['Abuja Municipal', 'Bwari', 'Gwagwalada', 'Kuje', 'Kwali'],
@@ -51,7 +62,7 @@ const OrderSchema = z.object({
   title: z.string({ required_error: 'Please select a title.' }),
   politicianName: z.string().min(3, 'Name must be at least 3 characters.'),
   politicalParty: z.string({ required_error: "Please select a political party." }),
-  politicalRole: z.string().min(3, 'Political role must be at least 3 characters.'),
+  politicalRole: z.string({ required_error: 'Please select a political role.' }),
   photo: z.any().refine(file => file instanceof File, 'A photo is required.'),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   phone: z.string().regex(/^0[789][01]\d{8}$/, { message: 'Please enter a valid Nigerian phone number.' }),
@@ -127,7 +138,7 @@ export function OrderForm() {
     defaultValues: {
       orderItems: [],
       politicianName: '',
-      politicalRole: '',
+      politicalRole: undefined,
       email: '',
       phone: '',
       state: undefined,
@@ -264,9 +275,14 @@ export function OrderForm() {
                       )} />
                       <FormField control={form.control} name="politicianName" render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Full Name (on card)</FormLabel>
-                          <FormControl><Input placeholder="John Doe" {...field} name="politicianName" /></FormControl>
-                          <FormMessage />
+                            <FormLabel>Full Name (on card)</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input placeholder="John Doe" {...field} name="politicianName" className="pl-10" />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
                         </FormItem>
                       )} />
                     </div>
@@ -289,7 +305,17 @@ export function OrderForm() {
                     <FormField control={form.control} name="politicalRole" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Political Role / Aspiration</FormLabel>
-                        <FormControl><Input placeholder="e.g., Governor, Lagos State" {...field} name="politicalRole" /></FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <SelectValue placeholder="Select a role" className="pl-10" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {politicalRoles.map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )} />
