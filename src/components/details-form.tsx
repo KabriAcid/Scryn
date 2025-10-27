@@ -1,15 +1,14 @@
 'use client';
 
 import React, { useActionState, useEffect, useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, LoaderCircle } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Gift, LoaderCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { submitDetails } from '@/app/actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
@@ -21,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import Link from 'next/link';
 
 
 const nigerianBanks = [
@@ -146,13 +146,22 @@ export function DetailsForm() {
     <form action={formAction} className="space-y-8 overflow-hidden">
       {state.status !== 'idle' && state.message && (
         <Alert variant={state.status === 'error' ? 'destructive' : 'default'} className={cn(
+          'flex flex-col items-center justify-center text-center p-6 space-y-4',
           {'bg-green-100/50 border-green-400 text-green-800 dark:bg-green-900/20 dark:border-green-600 dark:text-green-300': state.status === 'success'}
         )}>
-           {state.status === 'success' ? <CheckCircle /> : <AlertCircle />}
-          <AlertTitle>{state.status === 'success' ? 'Success!' : 'Error'}</AlertTitle>
+           {state.status === 'success' ? <CheckCircle className="h-12 w-12" /> : <AlertCircle className="h-12 w-12" />}
+          <AlertTitle className="text-2xl font-bold">{state.status === 'success' ? 'Success!' : 'Error'}</AlertTitle>
           <AlertDescription>
             {state.message}
           </AlertDescription>
+          {state.status === 'success' && (
+            <Button asChild className="mt-4">
+              <Link href="/redeem">
+                <Gift className="mr-2 h-4 w-4" />
+                Redeem Another Card
+              </Link>
+            </Button>
+          )}
         </Alert>
       )}
 
