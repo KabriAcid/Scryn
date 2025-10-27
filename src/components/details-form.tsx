@@ -129,18 +129,30 @@ export function DetailsForm() {
             </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            <div>
-                <p className="font-medium text-muted-foreground">IP Address</p>
-                <p className="font-mono">{ipAddress || 'Loading...'}</p>
-                <input type="hidden" name="ipAddress" value={ipAddress} />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+                <Label htmlFor="bvn">BVN (Bank Verification Number)</Label>
+                <Input id="bvn" name="bvn" placeholder="222-222-222-22" required />
             </div>
-             <div>
-                <p className="font-medium text-muted-foreground">Approx. Location</p>
-                <p>{location || 'Loading...'}</p>
-                <input type="hidden" name="location" value={location} />
+             <div className="space-y-2">
+                <Label htmlFor="nin">NIN (National Identification Number)</Label>
+                <Input id="nin" name="nin" placeholder="111-111-111-11" required />
             </div>
         </div>
+        
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+                <Label htmlFor="state">State</Label>
+                <Input id="state" name="state" placeholder="Lagos" required />
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="lga">LGA (Local Government Area)</Label>
+                <Input id="lga" name="lga" placeholder="Ikeja" required />
+            </div>
+        </div>
+
+        <input type="hidden" name="ipAddress" value={ipAddress} />
+        <input type="hidden" name="location" value={location} />
 
         <SubmitButton />
         </>
