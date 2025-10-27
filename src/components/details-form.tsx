@@ -4,8 +4,8 @@ import React, { useActionState, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Gift, LoaderCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Gift, LoaderCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,13 +52,13 @@ const STEPS = [
 ];
 
 const formSchema = z.object({
-    accountName: z.string().min(2, { message: "Full name must be at least 2 characters." }),
-    email: z.string().email({ message: "Please enter a valid email address." }),
-    phone: z.string().regex(/^0[789][01]\d{8}$/, { message: "Please enter a valid Nigerian phone number." }),
-    nin: z.string().regex(/^\d{11}$/, { message: "NIN must be 11 digits." }),
-    accountNumber: z.string().regex(/^\d{10}$/, { message: "Account number must be 10 digits." }),
+    accountName: z.string().min(2, { message: "Full name must be at least 2 characters." }).max(50, { message: "Full name cannot be more than 50 characters." }),
+    email: z.string().email({ message: "Please enter a valid email address." }).max(50, { message: "Email cannot be more than 50 characters." }),
+    phone: z.string().regex(/^0[789][01]\d{8}$/, { message: "Please enter a valid Nigerian phone number." }).max(11),
+    nin: z.string().regex(/^\d{11}$/, { message: "NIN must be 11 digits." }).max(11),
+    accountNumber: z.string().regex(/^\d{10}$/, { message: "Account number must be 10 digits." }).max(10),
     bankName: z.string({ required_error: 'Please select a bank.' }),
-    bvn: z.string().regex(/^\d{11}$/, { message: "BVN must be 11 digits." }),
+    bvn: z.string().regex(/^\d{11}$/, { message: "BVN must be 11 digits." }).max(11),
     state: z.string({ required_error: 'Please select a state.' }),
     lga: z.string({ required_error: 'Please select an LGA.' }),
 });
