@@ -54,23 +54,15 @@ export function RedemptionForm() {
 
   return (
     <form action={formAction} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="card-code">Scratch Card Code</Label>
-        <Input id="card-code" name="cardCode" placeholder="XXXX-XXXX-XXXX-XXXX" required />
-      </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="bank-name">Bank Name</Label>
-          <Input id="bank-name" name="bankName" placeholder="e.g., Zenith Bank" required />
+          <Label htmlFor="card-code">Scratch Card Code</Label>
+          <Input id="card-code" name="cardCode" placeholder="XXXX-XXXX-XXXX-XXXX" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="account-number">Account Number</Label>
-          <Input id="account-number" name="accountNumber" placeholder="0123456789" required />
+          <Label htmlFor="serial-number">Serial Number</Label>
+          <Input id="serial-number" name="serialNumber" placeholder="SN-XXXXXXX" required />
         </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="account-name">Account Name</Label>
-        <Input id="account-name" name="accountName" placeholder="Full Name" required />
       </div>
       <SubmitButton />
     </form>

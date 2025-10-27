@@ -4,17 +4,13 @@ import { z } from 'zod';
 
 const RedemptionSchema = z.object({
   cardCode: z.string().min(1, 'Card code is required.'),
-  bankName: z.string().min(1, 'Bank name is required.'),
-  accountNumber: z.string().min(10, 'A valid account number is required.'),
-  accountName: z.string().min(1, 'Account name is required.'),
+  serialNumber: z.string().min(1, 'Serial number is required.'),
 });
 
 export async function redeemCard(prevState: any, formData: FormData) {
   const validatedFields = RedemptionSchema.safeParse({
     cardCode: formData.get('cardCode'),
-    bankName: formData.get('bankName'),
-    accountNumber: formData.get('accountNumber'),
-    accountName: formData.get('accountName'),
+    serialNumber: formData.get('serialNumber'),
   });
 
   if (!validatedFields.success) {
@@ -34,6 +30,8 @@ export async function redeemCard(prevState: any, formData: FormData) {
       message: 'This card code is invalid or has already been used.',
     };
   }
+
+  // Business logic for Scryn card goes here
 
   return {
     status: 'success',

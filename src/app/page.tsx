@@ -46,7 +46,7 @@ export default function HomePage() {
             <Card className="mx-auto max-w-2xl shadow-2xl">
               <CardHeader className="text-center">
                 <CardTitle className="text-3xl font-bold">Redeem Your Card</CardTitle>
-                <CardDescription>Enter your scratch card code and bank details to receive funds.</CardDescription>
+                <CardDescription>Enter your scratch card code and serial number to receive funds.</CardDescription>
               </CardHeader>
               <CardContent>
                 <RedemptionForm />
