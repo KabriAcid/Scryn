@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle } from 'lucide-react';
 import type { Order } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 const orders: Order[] = [
   { id: 'ORD-001', date: '2023-10-25', denomination: 5000, quantity: 10000, status: 'Completed' },
@@ -22,9 +23,11 @@ export default function OrdersPage() {
           <CardTitle>Card Orders</CardTitle>
           <CardDescription>Manage your scratch card orders.</CardDescription>
         </div>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Create New Order
+        <Button asChild>
+          <Link href="/dashboard/orders/new">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create New Order
+          </Link>
         </Button>
       </CardHeader>
       <CardContent>

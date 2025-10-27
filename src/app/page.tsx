@@ -14,7 +14,7 @@ export default function HomePage() {
       <header className="container mx-auto flex h-20 items-center justify-between px-4 md:px-6">
         <Logo />
         <Button asChild>
-          <Link href="/dashboard">
+          <Link href="/dashboard/orders/new">
             <span className="sm:hidden">Request / Order</span>
             <span className="hidden sm:block">Order cards</span>
           </Link>
