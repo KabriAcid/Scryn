@@ -7,7 +7,7 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function NewOrderPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 pt-24 md:pt-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
         <header className="absolute top-0 left-0 w-full p-4 md:p-6">
             <div className='flex items-center justify-between'>
                 <Logo />
@@ -19,7 +19,7 @@ export default function NewOrderPage() {
                 </Button>
             </div>
       </header>
-      <main className="w-full max-w-2xl">
+      <main className="w-full max-w-2xl mt-20">
         <Card className="shadow-2xl">
             <CardHeader className="text-center">
                 <CardTitle className="text-3xl font-bold">Create a New Card Order</CardTitle>
