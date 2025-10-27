@@ -14,7 +14,7 @@ export default function HomePage() {
       <header className="container mx-auto flex h-20 items-center justify-between px-4 md:px-6">
         <Logo />
         <Button asChild>
-          <Link href="/dashboard">Politician Login</Link>
+          <Link href="/dashboard">Request or Order cards</Link>
         </Button>
       </header>
       <main className="flex-1">
@@ -55,7 +55,7 @@ export default function HomePage() {
                 A Modern Solution for Community Support
               </h2>
               <p className="text-muted-foreground md:text-lg">
-                ScrynCard provides a modern toolkit for politicians and a secure way for citizens to receive support.
+                Scryn provides a modern toolkit for politicians and a secure way for citizens to receive support.
               </p>
             </div>
             <div className="grid gap-6">
@@ -100,7 +100,7 @@ export default function HomePage() {
       <footer className="border-t bg-secondary/50">
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 py-8 md:flex-row md:px-6">
           <Logo />
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} ScrynCard. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Scryn. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <Link href="#" className="text-sm hover:underline">
               Terms of Service

@@ -7,9 +7,9 @@ import { cn } from '@/lib/utils';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'ScrynCard - Political Scratch Card Fundraising',
+  title: 'Scryn - Political Scratch Card Fundraising',
   description:
-    'ScrynCard revolutionizes political fundraising in Nigeria, enabling transparent and secure distribution of funds through scratch cards.',
+    'Scryn revolutionizes political fundraising in Nigeria, enabling transparent and secure distribution of funds through scratch cards.',
 };
 
 export default function RootLayout({
