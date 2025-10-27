@@ -2,6 +2,7 @@
 
 import React, { useActionState, useEffect, useState } from 'react';
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, LoaderCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,9 +46,33 @@ const STEPS = [
   { id: 3, title: 'Location' },
 ];
 
+const stepVariants = {
+  hidden: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? '50%' : '-50%',
+  }),
+  visible: {
+    opacity: 1,
+    x: '0%',
+    transition: {
+      duration: 0.5,
+      ease: 'easeInOut',
+    },
+  },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction < 0 ? '50%' : '-50%',
+    transition: {
+      duration: 0.5,
+      ease: 'easeInOut',
+    },
+  }),
+};
+
 export function DetailsForm() {
   const [state, formAction, isPending] = useActionState(submitDetails, initialState);
   const [step, setStep] = useState(1);
+  const [direction, setDirection] = useState(1);
 
   const [ipAddress, setIpAddress] = useState('');
   const [location, setLocation] = useState('');
@@ -75,11 +100,17 @@ export function DetailsForm() {
     setLgaKey(prev => prev + 1); // Reset LGA select
   };
   
-  const nextStep = () => setStep(prev => (prev < STEPS.length ? prev + 1 : prev));
-  const prevStep = () => setStep(prev => (prev > 1 ? prev - 1 : prev));
+  const nextStep = () => {
+    setDirection(1);
+    setStep(prev => (prev < STEPS.length ? prev + 1 : prev));
+  };
+  const prevStep = () => {
+    setDirection(-1);
+    setStep(prev => (prev > 1 ? prev - 1 : prev));
+  };
 
   return (
-    <form action={formAction} className="space-y-8">
+    <form action={formAction} className="space-y-8 overflow-hidden">
       {state.status !== 'idle' && state.message && (
         <Alert variant={state.status === 'error' ? 'destructive' : 'default'} className={cn(
           {'bg-green-100/50 border-green-400 text-green-800 dark:bg-green-900/20 dark:border-green-600 dark:text-green-300': state.status === 'success'}
@@ -115,94 +146,122 @@ export function DetailsForm() {
             ))}
           </div>
 
-          <div className="space-y-6">
-            {step === 1 && (
-              <div className="space-y-6 animate-in fade-in">
-                <div className="space-y-2">
-                    <Label htmlFor="account-name">Full Name (as on bank account)</Label>
-                    <Input id="account-name" name="accountName" placeholder="John Doe" required />
-                </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email Address</Label>
-                        <Input id="email" name="email" type="email" placeholder="you@example.com" required />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <Input id="phone" name="phone" type="tel" placeholder="08012345678" required />
-                    </div>
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="nin">NIN (National Identification Number)</Label>
-                    <Input id="nin" name="nin" placeholder="111-111-111-11" required />
-                </div>
-              </div>
-            )}
+          <div className="relative h-[330px]">
+            <AnimatePresence initial={false} custom={direction} mode="wait">
+              {step === 1 && (
+                 <motion.div
+                    key={1}
+                    custom={direction}
+                    variants={stepVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="space-y-6 absolute w-full"
+                >
+                  <div className="space-y-2">
+                      <Label htmlFor="account-name">Full Name (as on bank account)</Label>
+                      <Input id="account-name" name="accountName" placeholder="John Doe" required />
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                          <Label htmlFor="email">Email Address</Label>
+                          <Input id="email" name="email" type="email" placeholder="you@example.com" required />
+                      </div>
+                      <div className="space-y-2">
+                          <Label htmlFor="phone">Phone Number</Label>
+                          <Input id="phone" name="phone" type="tel" placeholder="08012345678" required />
+                      </div>
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="nin">NIN (National Identification Number)</Label>
+                      <Input id="nin" name="nin" placeholder="111-111-111-11" required />
+                  </div>
+                </motion.div>
+              )}
 
-            {step === 2 && (
-              <div className="space-y-6 animate-in fade-in">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                        <Label htmlFor="account-number">Bank Account Number</Label>
-                        <Input id="account-number" name="accountNumber" placeholder="0123456789" required />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="bank-name">Bank Name</Label>
-                         <Select name="bankName" required>
-                            <SelectTrigger id="bank-name">
-                                <SelectValue placeholder="Select your bank" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {nigerianBanks.map(bank => (
-                                     <SelectItem key={bank} value={bank}>{bank}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="bvn">BVN (Bank Verification Number)</Label>
-                    <Input id="bvn" name="bvn" placeholder="222-222-222-22" required />
-                </div>
-              </div>
-            )}
+              {step === 2 && (
+                 <motion.div
+                    key={2}
+                    custom={direction}
+                    variants={stepVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="space-y-6 absolute w-full"
+                >
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                          <Label htmlFor="account-number">Bank Account Number</Label>
+                          <Input id="account-number" name="accountNumber" placeholder="0123456789" required />
+                      </div>
+                      <div className="space-y-2">
+                          <Label htmlFor="bank-name">Bank Name</Label>
+                          <Select name="bankName" required>
+                              <SelectTrigger id="bank-name">
+                                  <SelectValue placeholder="Select your bank" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  {nigerianBanks.map(bank => (
+                                      <SelectItem key={bank} value={bank}>{bank}</SelectItem>
+                                  ))}
+                              </SelectContent>
+                          </Select>
+                      </div>
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="bvn">BVN (Bank Verification Number)</Label>
+                      <Input id="bvn" name="bvn" placeholder="222-222-222-22" required />
+                  </div>
+                </motion.div>
+              )}
 
-            {step === 3 && (
-              <div className="space-y-6 animate-in fade-in">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                        <Label htmlFor="state">State</Label>
-                         <Select name="state" required onValueChange={handleStateChange}>
-                            <SelectTrigger id="state">
-                                <SelectValue placeholder="Select your state" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {stateNames.map(state => (
-                                        <SelectItem key={state} value={state}>{state}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="lga">LGA (Local Government Area)</Label>
-                        <Select name="lga" required key={lgaKey} disabled={!selectedState}>
-                            <SelectTrigger id="lga">
-                                <SelectValue placeholder="Select your LGA" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {lgas.map(lga => (
-                                    <SelectItem key={lga} value={lga}>{lga}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-              </div>
-            )}
+              {step === 3 && (
+                 <motion.div
+                    key={3}
+                    custom={direction}
+                    variants={stepVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="space-y-6 absolute w-full"
+                >
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                          <Label htmlFor="state">State</Label>
+                          <Select name="state" required onValueChange={handleStateChange}>
+                              <SelectTrigger id="state">
+                                  <SelectValue placeholder="Select your state" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  {stateNames.map(state => (
+                                          <SelectItem key={state} value={state}>{state}</SelectItem>
+                                  ))}
+                              </SelectContent>
+                          </Select>
+                      </div>
+                      <div className="space-y-2">
+                          <Label htmlFor="lga">LGA (Local Government Area)</Label>
+                          <Select name="lga" required key={lgaKey} disabled={!selectedState}>
+                              <SelectTrigger id="lga">
+                                  <SelectValue placeholder="Select your LGA" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  {lgas.map(lga => (
+                                      <SelectItem key={lga} value={lga}>{lga}</SelectItem>
+                                  ))}
+                              </SelectContent>
+                          </Select>
+                      </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           
-          <div className="flex justify-between">
-            {step > 1 && <Button type="button" variant="outline" onClick={prevStep}><ArrowLeft /> Previous</Button>}
+          <div className="flex justify-between pt-8">
+            {step > 1 ? (
+              <Button type="button" variant="outline" onClick={prevStep}><ArrowLeft /> Previous</Button>
+            ) : <div />}
             {step < STEPS.length && <Button type="button" onClick={nextStep} className="ml-auto">Next <ArrowRight /></Button>}
             {step === STEPS.length && <SubmitButton pending={isPending} />}
           </div>
