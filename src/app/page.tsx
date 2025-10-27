@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, Gift, ShieldCheck, TrendingUp } from 'lucide-react';
 import { Logo } from '@/components/logo';
-import { RedemptionForm } from '@/components/redemption-form';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function HomePage() {
@@ -36,22 +35,15 @@ export default function HomePage() {
               Empowering Nigerian Communities
             </h1>
             <p className="mx-auto mt-4 max-w-[700px] text-lg text-muted-foreground md:text-xl">
-              A transparent, efficient, and secure way to engage voters and distribute funds.
+              A transparent, efficient, and secure platform for distributing funds.
             </p>
-          </div>
-        </section>
-
-        <section id="redeem" className="relative z-20 -mt-16">
-          <div className="container mx-auto px-4 md:px-6">
-            <Card className="mx-auto max-w-2xl shadow-2xl">
-              <CardHeader className="text-center">
-                <CardTitle className="text-3xl font-bold">Redeem Your Card</CardTitle>
-                <CardDescription>Enter your scratch card code and serial number to receive funds.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RedemptionForm />
-              </CardContent>
-            </Card>
+            <div className='mt-8'>
+                <Button asChild size="lg">
+                    <Link href="/redeem">
+                        Redeem Your Card <ArrowRight className="ml-2" />
+                    </Link>
+                </Button>
+            </div>
           </div>
         </section>
 
@@ -60,7 +52,7 @@ export default function HomePage() {
             <div className="space-y-4">
               <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm">Key Features</div>
               <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl">
-                Revolutionizing Political Engagement
+                A Modern Solution for Community Support
               </h2>
               <p className="text-muted-foreground md:text-lg">
                 ScrynCard provides a modern toolkit for politicians and a secure way for citizens to receive support.
