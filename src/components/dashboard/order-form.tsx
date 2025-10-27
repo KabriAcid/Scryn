@@ -5,7 +5,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Home, LoaderCircle, PartyPopper, Trash2, Upload, User, Wallet } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Home, LoaderCircle, Mail, PartyPopper, Phone, Trash2, Upload, User, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -52,6 +52,8 @@ const OrderSchema = z.object({
   politicianName: z.string().min(3, 'Name must be at least 3 characters.'),
   politicalParty: z.string({ required_error: "Please select a political party." }),
   photo: z.any().refine(file => file instanceof File, 'A photo is required.'),
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  phone: z.string().regex(/^0[789][01]\d{8}$/, { message: 'Please enter a valid Nigerian phone number.' }),
   state: z.string({ required_error: 'Please select a state.' }),
   lga: z.string({ required_error: 'Please select an LGA.' }),
   orderItems: z.array(z.object({
@@ -79,8 +81,8 @@ type OrderFormValues = z.infer<typeof OrderSchema>;
 
 const STEPS = [
   { id: 1, title: 'Card Customization', fields: ['title', 'politicianName', 'politicalParty', 'photo'] as const, icon: User },
-  { id: 2, title: 'Card Details', fields: ['orderItems'] as const, icon: Wallet },
-  { id: 3, title: 'Location', fields: ['state', 'lga'] as const, icon: Home },
+  { id: 2, title: 'Contact & Location', fields: ['email', 'phone', 'state', 'lga'] as const, icon: Home },
+  { id: 3, title: 'Card Details', fields: ['orderItems'] as const, icon: Wallet },
 ];
 
 const initialState = {
@@ -124,6 +126,8 @@ export function OrderForm() {
     defaultValues: {
       orderItems: [],
       politicianName: '',
+      email: '',
+      phone: '',
       state: undefined,
       lga: undefined,
     },
@@ -301,8 +305,78 @@ export function OrderForm() {
                     )} />
                   </>
                 )}
-
+                
                 {step === 2 && (
+                  <>
+                     <div className="space-y-2">
+                        <FormLabel className="text-base">Contact and Location</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                            Provide your contact details and order location.
+                        </p>
+                    </div>
+                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <FormField control={form.control} name="email" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Email Address</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input type="email" placeholder="you@example.com" {...field} className="pl-10" />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <FormField control={form.control} name="phone" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Phone Number</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                     <Input type="tel" placeholder="08012345678" {...field} className="pl-10" />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <FormField control={form.control} name="state" render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel>State</FormLabel>
+                                  <Select onValueChange={(value) => {
+                                      field.onChange(value);
+                                      form.resetField('lga');
+                                  }} defaultValue={field.value}>
+                                      <FormControl>
+                                      <SelectTrigger><SelectValue placeholder="Select your state" /></SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                          {stateNames.map(state => (<SelectItem key={state} value={state}>{state}</SelectItem>))}
+                                      </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                              </FormItem>
+                          )} />
+                          <FormField control={form.control} name="lga" render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel>LGA (Local Government Area)</FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={!selectedState}>
+                                      <FormControl>
+                                      <SelectTrigger><SelectValue placeholder="Select your LGA" /></SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                          {(statesAndLgas[selectedState] || []).map(lga => (<SelectItem key={lga} value={lga}>{lga}</SelectItem>))}
+                                      </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                              </FormItem>
+                          )} />
+                    </div>
+                  </>
+                )}
+
+                {step === 3 && (
                   <>
                     <div className="space-y-2">
                         <FormLabel className="text-base">Card Denomination (₦)</FormLabel>
@@ -378,51 +452,6 @@ export function OrderForm() {
                     )}
                   </>
                 )}
-
-                 {step === 3 && (
-                  <>
-                     <div className="space-y-2">
-                        <FormLabel className="text-base">Order Location</FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                            Specify the state and local government area for this order.
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                          <FormField control={form.control} name="state" render={({ field }) => (
-                              <FormItem>
-                                  <FormLabel>State</FormLabel>
-                                  <Select onValueChange={(value) => {
-                                      field.onChange(value);
-                                      form.resetField('lga');
-                                  }} defaultValue={field.value}>
-                                      <FormControl>
-                                      <SelectTrigger><SelectValue placeholder="Select your state" /></SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                          {stateNames.map(state => (<SelectItem key={state} value={state}>{state}</SelectItem>))}
-                                      </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                              </FormItem>
-                          )} />
-                          <FormField control={form.control} name="lga" render={({ field }) => (
-                              <FormItem>
-                                  <FormLabel>LGA (Local Government Area)</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={!selectedState}>
-                                      <FormControl>
-                                      <SelectTrigger><SelectValue placeholder="Select your LGA" /></SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                          {(statesAndLgas[selectedState] || []).map(lga => (<SelectItem key={lga} value={lga}>{lga}</SelectItem>))}
-                                      </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                              </FormItem>
-                          )} />
-                    </div>
-                  </>
-                )}
-
               </div>
             </motion.div>
           </AnimatePresence>

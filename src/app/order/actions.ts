@@ -12,6 +12,8 @@ const OrderSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
   politicianName: z.string().min(3, 'Name must be at least 3 characters.'),
   politicalParty: z.string().min(2, 'Political party is required.'),
+  email: z.string().email('Invalid email address.'),
+  phone: z.string().min(10, 'Invalid phone number.'),
   state: z.string().min(2, 'State is required.'),
   lga: z.string().min(2, 'LGA is required.'),
   orderItems: z.string().transform((str, ctx) => {
@@ -51,6 +53,8 @@ export async function createOrder(prevState: any, formData: FormData) {
     title: formData.get('title'),
     politicianName: formData.get('politicianName'),
     politicalParty: formData.get('politicalParty'),
+    email: formData.get('email'),
+    phone: formData.get('phone'),
     state: formData.get('state'),
     lga: formData.get('lga'),
     orderItems: formData.get('orderItems'),
