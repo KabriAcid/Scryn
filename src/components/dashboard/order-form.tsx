@@ -5,7 +5,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, LoaderCircle, PartyPopper, Trash2, Upload, User, Wallet } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Home, LoaderCircle, PartyPopper, Trash2, Upload, User, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,6 +20,15 @@ import { Card } from '../ui/card';
 
 const politicalParties = ["ACN", "PDP", "APC", "LP", "NNPP", "APGA"];
 const titles = ["Hon.", "Chief", "Dr.", "Mr.", "Mrs.", "Ms."];
+
+const statesAndLgas: Record<string, string[]> = {
+  'Abuja (FCT)': ['Abuja Municipal', 'Bwari', 'Gwagwalada', 'Kuje', 'Kwali'],
+  'Lagos': ['Agege', 'Ikeja', 'Kosofe', 'Mushin', 'Oshodi-Isolo'],
+  'Rivers': ['Port Harcourt', 'Obio-Akpor', 'Eleme', 'Ikwerre', 'Oyigbo'],
+  'Kano': ['Kano Municipal', 'Fagge', 'Dala', 'Gwale', 'Tarauni'],
+  'Oyo': ['Ibadan North', 'Ibadan South-West', 'Ibadan North-West', 'Ibadan North-East', 'Ibadan South-East' ]
+};
+const stateNames = Object.keys(statesAndLgas);
 
 const denominations = [
   { id: '2000', label: '₦2k' },
@@ -43,6 +52,8 @@ const OrderSchema = z.object({
   politicianName: z.string().min(3, 'Name must be at least 3 characters.'),
   politicalParty: z.string({ required_error: "Please select a political party." }),
   photo: z.any().refine(file => file instanceof File, 'A photo is required.'),
+  state: z.string({ required_error: 'Please select a state.' }),
+  lga: z.string({ required_error: 'Please select an LGA.' }),
   orderItems: z.array(z.object({
     denomination: z.enum(denominationEnum),
     quantity: z.coerce.number().min(1, "Min 1"),
@@ -68,6 +79,7 @@ type OrderFormValues = z.infer<typeof OrderSchema>;
 const STEPS = [
   { id: 1, title: 'Card Customization', fields: ['title', 'politicianName', 'politicalParty', 'photo'] as const, icon: User },
   { id: 2, title: 'Card Details', fields: ['orderItems'] as const, icon: Wallet },
+  { id: 3, title: 'Location', fields: ['state', 'lga'] as const, icon: Home },
 ];
 
 const initialState = {
@@ -110,14 +122,18 @@ export function OrderForm() {
     mode: 'onChange',
     defaultValues: {
       orderItems: [],
+      state: undefined,
+      lga: undefined,
     },
   });
 
-  const { fields, append, remove, update } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "orderItems",
     keyName: "customId",
   });
+  
+  const selectedState = form.watch('state');
 
   useEffect(() => {
     if (state.status === 'error' && state.message) {
@@ -200,7 +216,7 @@ export function OrderForm() {
                 >
                   {step > s.id ? <CheckCircle className="h-6 w-6" /> : <s.icon className="h-6 w-6" />}
                 </div>
-                <p className={cn("text-sm", step === s.id ? 'font-semibold text-primary' : 'text-muted-foreground')}>{s.title}</p>
+                <p className={cn("text-sm text-center", step === s.id ? 'font-semibold text-primary' : 'text-muted-foreground')}>{s.title}</p>
               </div>
               {index < STEPS.length - 1 && <div className="flex-1 mt-[-20px] border-t-2 border-dashed border-border" />}
             </React.Fragment>
@@ -262,7 +278,7 @@ export function OrderForm() {
                         <FormMessage />
                       </FormItem>
                     )} />
-                    <FormField control={form.control} name="photo" render={({ field }) => (
+                    <FormField control={form.control} name="photo" render={() => (
                       <FormItem>
                           <FormLabel>Photo for Card</FormLabel>
                           <FormControl>
@@ -361,6 +377,51 @@ export function OrderForm() {
                     )}
                   </>
                 )}
+
+                 {step === 3 && (
+                  <>
+                     <div className="space-y-2">
+                        <FormLabel className="text-base">Order Location</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                            Specify the state and local government area for this order.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <FormField control={form.control} name="state" render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel>State</FormLabel>
+                                  <Select onValueChange={(value) => {
+                                      field.onChange(value);
+                                      form.resetField('lga');
+                                  }} defaultValue={field.value}>
+                                      <FormControl>
+                                      <SelectTrigger><SelectValue placeholder="Select your state" /></SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                          {stateNames.map(state => (<SelectItem key={state} value={state}>{state}</SelectItem>))}
+                                      </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                              </FormItem>
+                          )} />
+                          <FormField control={form.control} name="lga" render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel>LGA (Local Government Area)</FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value} disabled={!selectedState}>
+                                      <FormControl>
+                                      <SelectTrigger><SelectValue placeholder="Select your LGA" /></SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                          {(statesAndLgas[selectedState] || []).map(lga => (<SelectItem key={lga} value={lga}>{lga}</SelectItem>))}
+                                      </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                              </FormItem>
+                          )} />
+                    </div>
+                  </>
+                )}
+
               </div>
             </motion.div>
           </AnimatePresence>
@@ -368,9 +429,9 @@ export function OrderForm() {
         
         <div className="flex justify-between pt-2">
             {step > 1 ? (
-              <Button type="button" variant="outline" onClick={prevStep}><ArrowLeft /> Previous</Button>
+              <Button type="button" variant="outline" onClick={prevStep}><ArrowLeft className="mr-2 h-4 w-4" /> Previous</Button>
             ) : <div />}
-            {step < STEPS.length && <Button type="button" onClick={nextStep} className="ml-auto">Next <ArrowRight /></Button>}
+            {step < STEPS.length && <Button type="button" onClick={nextStep} className="ml-auto">Next <ArrowRight className="ml-2 h-4 w-4" /></Button>}
             {step === STEPS.length && <SubmitButton pending={isPending} />}
         </div>
       </form>
@@ -384,12 +445,12 @@ function SubmitButton({ pending }: { pending: boolean }) {
     <Button type="submit" className="w-full sm:w-auto ml-auto" disabled={pending}>
       {pending ? (
         <>
-          <LoaderCircle className="animate-spin" />
+          <LoaderCircle className="animate-spin mr-2 h-4 w-4" />
           Placing Order...
         </>
       ) : (
         <>
-          <PartyPopper />
+          <PartyPopper className="mr-2 h-4 w-4" />
           Place Order
         </>
       )}
