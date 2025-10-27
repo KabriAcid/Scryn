@@ -125,6 +125,17 @@ export function DetailsForm() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <Input id="email" name="email" type="email" placeholder="you@example.com" required />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input id="phone" name="phone" type="tel" placeholder="08012345678" required />
+            </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
                 <Label htmlFor="account-number">Bank Account Number</Label>
                 <Input id="account-number" name="accountNumber" placeholder="0123456789" required />
             </div>
