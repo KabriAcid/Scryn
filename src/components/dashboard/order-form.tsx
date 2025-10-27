@@ -51,6 +51,7 @@ const OrderSchema = z.object({
   title: z.string({ required_error: 'Please select a title.' }),
   politicianName: z.string().min(3, 'Name must be at least 3 characters.'),
   politicalParty: z.string({ required_error: "Please select a political party." }),
+  politicalRole: z.string().min(3, 'Political role must be at least 3 characters.'),
   photo: z.any().refine(file => file instanceof File, 'A photo is required.'),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   phone: z.string().regex(/^0[789][01]\d{8}$/, { message: 'Please enter a valid Nigerian phone number.' }),
@@ -80,7 +81,7 @@ const OrderSchema = z.object({
 type OrderFormValues = z.infer<typeof OrderSchema>;
 
 const STEPS = [
-  { id: 1, title: 'Card Customization', fields: ['title', 'politicianName', 'politicalParty', 'photo'] as const, icon: User },
+  { id: 1, title: 'Card Customization', fields: ['title', 'politicianName', 'politicalParty', 'politicalRole', 'photo'] as const, icon: User },
   { id: 2, title: 'Contact & Location', fields: ['email', 'phone', 'state', 'lga'] as const, icon: Home },
   { id: 3, title: 'Card Details', fields: ['orderItems'] as const, icon: Wallet },
 ];
@@ -126,6 +127,7 @@ export function OrderForm() {
     defaultValues: {
       orderItems: [],
       politicianName: '',
+      politicalRole: '',
       email: '',
       phone: '',
       state: undefined,
@@ -281,6 +283,13 @@ export function OrderForm() {
                             {politicalParties.map(party => <SelectItem key={party} value={party}>{party}</SelectItem>)}
                           </SelectContent>
                         </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="politicalRole" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Political Role / Aspiration</FormLabel>
+                        <FormControl><Input placeholder="e.g., Governor, Lagos State" {...field} name="politicalRole" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
