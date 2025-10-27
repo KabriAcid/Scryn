@@ -198,7 +198,7 @@ export function OrderForm() {
           ))}
         </div>
 
-        <div className="relative min-h-[440px] overflow-hidden">
+        <div className="relative min-h-[450px] overflow-hidden">
           <AnimatePresence initial={false} custom={direction} mode="wait">
             {step === 1 && (
               <motion.div
