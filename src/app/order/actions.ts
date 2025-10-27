@@ -3,15 +3,45 @@
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 
+const OrderItemSchema = z.object({
+  denomination: z.string(),
+  quantity: z.coerce.number().min(1, 'Quantity must be at least 1.'),
+});
+
 const OrderSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
   politicianName: z.string().min(3, 'Name must be at least 3 characters.'),
   politicalParty: z.string().min(2, 'Political party is required.'),
-  // Photo validation will be handled client-side for now.
-  denomination: z.array(z.string()).refine((value) => value.some((item) => item), {
-    message: 'You have to select at least one denomination.',
+  orderItems: z.string().transform((str, ctx) => {
+    try {
+      const items = JSON.parse(str);
+      const validatedItems = z.array(OrderItemSchema).safeParse(items);
+      if (!validatedItems.success) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Invalid order items structure.",
+        });
+        return z.NEVER;
+      }
+      
+      const totalQuantity = validatedItems.data.reduce((acc, item) => acc + item.quantity, 0);
+      if (totalQuantity < 100) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Total quantity must be at least 100.",
+        });
+        return z.NEVER;
+      }
+      
+      return validatedItems.data;
+    } catch (e) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Invalid JSON for order items.",
+      });
+      return z.NEVER;
+    }
   }),
-  quantity: z.coerce.number().min(100, 'Quantity must be at least 100.'),
 });
 
 export async function createOrder(prevState: any, formData: FormData) {
@@ -19,8 +49,7 @@ export async function createOrder(prevState: any, formData: FormData) {
     title: formData.get('title'),
     politicianName: formData.get('politicianName'),
     politicalParty: formData.get('politicalParty'),
-    denomination: formData.getAll('denomination'),
-    quantity: formData.get('quantity'),
+    orderItems: formData.get('orderItems'),
   });
 
   if (!validatedFields.success) {
@@ -36,7 +65,7 @@ export async function createOrder(prevState: any, formData: FormData) {
 
   console.log('New Order Created:', {
     ...validatedFields.data
-    // In a real app, you would handle the file upload here.
+    // In a real app, you would handle the file upload here for formData.get('photo').
   });
 
   // On success, redirect to the dashboard.

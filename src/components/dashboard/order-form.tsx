@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useActionState, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, LoaderCircle, PartyPopper, Upload, User, Wallet } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, LoaderCircle, PartyPopper, Trash2, Upload, User, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,6 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { cn } from '@/lib/utils';
 import { DenominationPicker } from '../ui/form-elements/denomination-picker';
+import { QuantityInput } from '../ui/form-elements/quantity-input';
+import { Card } from '../ui/card';
 
 const politicalParties = ["ACN", "PDP", "APC", "LP", "NNPP", "APGA"];
 const titles = ["Hon.", "Chief", "Dr.", "Mr.", "Mrs.", "Ms."];
@@ -34,22 +36,31 @@ const denominations = [
   { id: '10000000', label: '₦10M' },
 ] as const;
 
+const denominationEnum = denominations.map(d => d.id) as [string, ...string[]];
+
 const OrderSchema = z.object({
   title: z.string({ required_error: 'Please select a title.' }),
   politicianName: z.string().min(3, 'Name must be at least 3 characters.'),
   politicalParty: z.string({ required_error: "Please select a political party." }),
   photo: z.any().refine(file => file instanceof File, 'A photo is required.'),
-  denomination: z.array(z.string()).refine((value) => value.some((item) => item), {
-    message: 'You have to select at least one denomination.',
-  }),
-  quantity: z.coerce.number().min(100, 'Quantity must be at least 100.'),
+  orderItems: z.array(z.object({
+    denomination: z.enum(denominationEnum),
+    quantity: z.coerce.number().min(1, "Min 1").min(100, 'Min 100 cards per denomination.'),
+  })).min(1, 'You must select at least one denomination and set a quantity.'),
+}).refine(data => {
+    const totalQuantity = data.orderItems.reduce((acc, item) => acc + item.quantity, 0);
+    return totalQuantity >= 100;
+}, {
+    message: 'Total quantity for the order must be at least 100 cards.',
+    path: ['orderItems'],
 });
+
 
 type OrderFormValues = z.infer<typeof OrderSchema>;
 
 const STEPS = [
   { id: 1, title: 'Card Customization', fields: ['title', 'politicianName', 'politicalParty', 'photo'] as const, icon: User },
-  { id: 2, title: 'Card Details', fields: ['denomination', 'quantity'] as const, icon: Wallet },
+  { id: 2, title: 'Card Details', fields: ['orderItems'] as const, icon: Wallet },
 ];
 
 const initialState = {
@@ -91,9 +102,14 @@ export function OrderForm() {
     resolver: zodResolver(OrderSchema),
     mode: 'onChange',
     defaultValues: {
-      quantity: 1000,
-      denomination: [],
+      orderItems: [],
     },
+  });
+
+  const { fields, append, remove, update } = useFieldArray({
+    control: form.control,
+    name: "orderItems",
+    keyName: "customId",
   });
 
   useEffect(() => {
@@ -132,9 +148,27 @@ export function OrderForm() {
     }
   };
 
+  const handleDenominationToggle = (id: string) => {
+    const itemIndex = fields.findIndex(field => field.denomination === id);
+    if (itemIndex > -1) {
+        remove(itemIndex);
+    } else {
+        append({ denomination: id as any, quantity: 100 });
+    }
+  };
+
+  const selectedDenominations = fields.map(f => f.denomination);
+  
+  const totalQuantity = form.watch('orderItems').reduce((acc, item) => acc + (item.quantity || 0), 0);
+  const totalValue = form.watch('orderItems').reduce((acc, item) => acc + (parseInt(item.denomination) * (item.quantity || 0)), 0);
+
   return (
     <Form {...form}>
-      <form action={formAction} className="space-y-6 max-w-lg mx-auto">
+      <form action={(formData) => {
+          const orderItems = form.getValues('orderItems');
+          formData.append('orderItems', JSON.stringify(orderItems));
+          formAction(formData);
+      }} className="space-y-6 max-w-lg mx-auto">
         {state.status === 'error' && state.message && (
             <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -164,7 +198,7 @@ export function OrderForm() {
           ))}
         </div>
 
-        <div className="relative h-[440px] overflow-hidden">
+        <div className="relative min-h-[440px] overflow-hidden">
           <AnimatePresence initial={false} custom={direction} mode="wait">
             {step === 1 && (
               <motion.div
@@ -231,7 +265,7 @@ export function OrderForm() {
                                         <p className="text-xs">PNG, JPG (MAX. 800x400px)</p>
                                     </div>
                                 )}
-                                <Input type="file" className="hidden" accept="image/png, image/jpeg" onChange={handlePhotoChange} />
+                                <Input type="file" className="hidden" accept="image/png, image/jpeg" onChange={handlePhotoChange} name="photo" />
                             </label>
                         </FormControl>
                         <FormMessage />
@@ -250,33 +284,76 @@ export function OrderForm() {
                 exit="exit"
                 className="space-y-4 absolute w-full"
               >
-                <FormField
-                  control={form.control}
-                  name="denomination"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="mb-4">
-                        <FormLabel className="text-base">Card Denomination (₦)</FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          Select one or more denominations for this order.
-                        </p>
-                      </div>
-                      <FormControl>
-                        <DenominationPicker field={field} denominations={denominations} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                <div className="space-y-2">
+                    <FormLabel className="text-base">Card Denomination (₦)</FormLabel>
+                    <p className="text-sm text-muted-foreground">
+                        Select one or more denominations for this order.
+                    </p>
+                </div>
+
+                <DenominationPicker
+                    denominations={denominations}
+                    selected={selectedDenominations}
+                    onToggle={handleDenominationToggle}
                 />
-                <FormField control={form.control} name="quantity" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="e.g., 10000" {...field} min="100" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                
+                {fields.length > 0 && (
+                    <div className="space-y-3 pt-4">
+                         <h3 className="font-medium text-lg">Selected Cards</h3>
+                         <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                            {fields.map((field, index) => {
+                                const denomination = denominations.find(d => d.id === field.denomination);
+                                return (
+                                    <Card key={field.id} className="p-3 flex items-center justify-between">
+                                        <div className='font-semibold'>{denomination?.label} cards</div>
+                                        <div className="flex items-center gap-2">
+                                            <FormField
+                                                control={form.control}
+                                                name={`orderItems.${index}.quantity`}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormControl>
+                                                            <QuantityInput {...field} />
+                                                        </FormControl>
+                                                        <FormMessage className="text-xs" />
+                                                    </FormItem>
+                                                )}
+                                                />
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                        </div>
+                                    </Card>
+                                )
+                            })}
+                         </div>
+                    </div>
+                )}
+                
+                <AnimatePresence>
+                    {form.formState.errors.orderItems && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                        >
+                            <FormMessage>{form.formState.errors.orderItems.message || form.formState.errors.orderItems.root?.message}</FormMessage>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                
+                {fields.length > 0 && (
+                    <Card className="p-4 mt-4 bg-muted/50">
+                        <div className="flex justify-between items-center">
+                            <span className="font-semibold">Total Quantity:</span>
+                            <span className="font-bold text-lg">{totalQuantity.toLocaleString()}</span>
+                        </div>
+                         <div className="flex justify-between items-center mt-2">
+                            <span className="font-semibold">Total Value:</span>
+                            <span className="font-bold text-lg text-primary">₦{totalValue.toLocaleString()}</span>
+                        </div>
+                    </Card>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
