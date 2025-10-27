@@ -8,8 +8,8 @@ const OrderSchema = z.object({
   politicianName: z.string().min(3, 'Name must be at least 3 characters.'),
   politicalParty: z.string().min(2, 'Political party is required.'),
   // Photo validation will be handled client-side for now.
-  denomination: z.string().refine(val => !isNaN(parseInt(val, 10)), {
-    message: "Please select a denomination.",
+  denomination: z.array(z.string()).refine((value) => value.some((item) => item), {
+    message: 'You have to select at least one denomination.',
   }),
   quantity: z.coerce.number().min(100, 'Quantity must be at least 100.'),
 });
@@ -19,7 +19,7 @@ export async function createOrder(prevState: any, formData: FormData) {
     title: formData.get('title'),
     politicianName: formData.get('politicianName'),
     politicalParty: formData.get('politicalParty'),
-    denomination: formData.get('denomination'),
+    denomination: formData.getAll('denomination'),
     quantity: formData.get('quantity'),
   });
 
