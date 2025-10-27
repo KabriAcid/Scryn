@@ -5,12 +5,16 @@ import { z } from 'zod';
 const RedemptionSchema = z.object({
   cardCode: z.string().min(1, 'Card code is required.'),
   serialNumber: z.string().min(1, 'Serial number is required.'),
+  consent: z.literal('on', {
+    errorMap: () => ({ message: 'You must agree to the terms and conditions.' }),
+  }),
 });
 
 export async function redeemCard(prevState: any, formData: FormData) {
   const validatedFields = RedemptionSchema.safeParse({
     cardCode: formData.get('cardCode'),
     serialNumber: formData.get('serialNumber'),
+    consent: formData.get('consent'),
   });
 
   if (!validatedFields.success) {

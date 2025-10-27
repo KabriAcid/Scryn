@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { redeemCard } from '@/app/actions';
+import { Checkbox } from '@/components/ui/checkbox';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -53,7 +54,7 @@ export function RedemptionForm() {
   }, [state, toast]);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="card-code">Scratch Card Code</Label>
@@ -63,6 +64,15 @@ export function RedemptionForm() {
           <Label htmlFor="serial-number">Serial Number</Label>
           <Input id="serial-number" name="serialNumber" placeholder="SN-XXXXXXX" required />
         </div>
+      </div>
+       <div className="flex items-center space-x-2">
+        <Checkbox id="consent" name="consent" />
+        <Label
+          htmlFor="consent"
+          className="text-sm font-normal text-muted-foreground"
+        >
+          I agree to the terms and conditions.
+        </Label>
       </div>
       <SubmitButton />
     </form>
