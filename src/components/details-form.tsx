@@ -1,7 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
-import { useEffect, useState } from 'react';
+import React, { useActionState, useEffect, useState } from 'react';
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, LoaderCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
