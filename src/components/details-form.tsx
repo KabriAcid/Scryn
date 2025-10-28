@@ -43,6 +43,7 @@ const stateNames = Object.keys(statesAndLgas);
 
 const wardsByLga: Record<string, string[]> = {
     'Abuja Municipal': ['City Centre', 'Garki', 'Wuse', 'Maitama'],
+    'Bwari': ['Bwari Central', 'Dutse', 'Kubwa', 'Ushafa'],
     'Ikeja': ['Alausa', 'Oregun', 'Ojodu', 'Agidingbi'],
     'Port Harcourt': ['Old GRA', 'New GRA', 'D-Line', 'Diobu'],
     'Kano Municipal': ['Sabo Gari', 'Nassarawa', 'Tarauni'],
@@ -58,8 +59,8 @@ const initialState = {
 
 const STEPS = [
   { id: 1, title: 'Personal Info', fields: ['accountName', 'email', 'phone', 'nin'] as const },
-  { id: 2, title: 'Bank Details', fields: ['accountNumber', 'bankName', 'bvn'] as const },
-  { id: 3, title: 'Location', fields: ['state', 'lga', 'ward'] as const },
+  { id: 2, title: 'Location', fields: ['state', 'lga', 'ward'] as const },
+  { id: 3, title: 'Bank Details', fields: ['accountNumber', 'bankName', 'bvn'] as const },
 ];
 
 const formSchema = z.object({
@@ -283,49 +284,6 @@ export function DetailsForm() {
                     className="space-y-4 absolute w-full"
                 >
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                     <FormField control={form.control} name="accountNumber" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Bank Account Number</FormLabel>
-                            <FormControl><Input placeholder="0123456789" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                     <FormField control={form.control} name="bankName" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Bank Name</FormLabel>
-                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                <SelectTrigger><SelectValue placeholder="Select your bank" /></SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {nigerianBanks.map(bank => (<SelectItem key={bank} value={bank}>{bank}</SelectItem>))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                  </div>
-                   <FormField control={form.control} name="bvn" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>BVN (Bank Verification Number)</FormLabel>
-                            <FormControl><Input placeholder="22222222222" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                </motion.div>
-              )}
-
-              {step === 3 && (
-                 <motion.div
-                    key={3}
-                    custom={direction}
-                    variants={stepVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="space-y-4 absolute w-full"
-                >
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <FormField control={form.control} name="state" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>State</FormLabel>
@@ -382,6 +340,49 @@ export function DetailsForm() {
                   </div>
                 </motion.div>
               )}
+
+              {step === 3 && (
+                 <motion.div
+                    key={3}
+                    custom={direction}
+                    variants={stepVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="space-y-4 absolute w-full"
+                >
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                     <FormField control={form.control} name="accountNumber" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Bank Account Number</FormLabel>
+                            <FormControl><Input placeholder="0123456789" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                     <FormField control={form.control} name="bankName" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Bank Name</FormLabel>
+                             <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Select your bank" /></SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {nigerianBanks.map(bank => (<SelectItem key={bank} value={bank}>{bank}</SelectItem>))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                  </div>
+                   <FormField control={form.control} name="bvn" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>BVN (Bank Verification Number)</FormLabel>
+                            <FormControl><Input placeholder="22222222222" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
           
@@ -418,3 +419,5 @@ function SubmitButton({ pending }: { pending: boolean }) {
     </Button>
   );
 }
+
+    
