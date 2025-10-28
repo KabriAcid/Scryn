@@ -22,10 +22,8 @@ import {
 } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import Link from 'next/link';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DobPicker } from './ui/form-elements/dob-picker';
 
 
 const nigerianBanks = [
@@ -82,7 +80,10 @@ const formSchema = z.object({
     email: z.string().email({ message: "Please enter a valid email address." }).max(50, { message: "Email cannot be more than 50 characters." }),
     phone: z.string().regex(/^0[789][01]\d{8}$/, { message: "Please enter a valid Nigerian phone number." }).max(11),
     nin: z.string().regex(/^\d{11}$/, { message: "NIN must be 11 digits." }).max(11),
-    dob: z.date({ required_error: "Your date of birth is required." }),
+    dob: z.date({ required_error: "Your date of birth is required." }).refine(date => {
+        const age = new Date().getFullYear() - date.getFullYear();
+        return age >= 18;
+    }, { message: "You must be at least 18 years old."}),
     accountNumber: z.string().regex(/^\d{10}$/, { message: "Account number must be 10 digits." }).max(10),
     bankName: z.string({ required_error: 'Please select a bank.' }),
     bvn: z.string().regex(/^\d{11}$/, { message: "BVN must be 11 digits." }).max(11),
@@ -381,37 +382,12 @@ export function DetailsForm() {
                             render={({ field }) => (
                                 <FormItem className="flex flex-col">
                                 <FormLabel>Date of birth</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                    <FormControl>
-                                        <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                            "w-full pl-3 text-left font-normal",
-                                            !field.value && "text-muted-foreground"
-                                        )}
-                                        >
-                                        {field.value ? (
-                                            format(field.value, "PPP")
-                                        ) : (
-                                            <span>Pick a date</span>
-                                        )}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                        </Button>
-                                    </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={field.value}
-                                        onSelect={field.onChange}
-                                        disabled={(date) =>
-                                        date > new Date() || date < new Date("1900-01-01")
-                                        }
-                                        initialFocus
-                                    />
-                                    </PopoverContent>
-                                </Popover>
+                                <DobPicker
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    required
+                                    disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
+                                />
                                 <FormMessage />
                                 </FormItem>
                             )}

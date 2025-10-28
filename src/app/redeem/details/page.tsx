@@ -11,7 +11,7 @@ export default function RedeemDetailsPage() {
             <CardTitle className="text-3xl font-bold">Almost there!</CardTitle>
             <CardDescription>Please provide your details to complete the redemption.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 md:p-6">
             <DetailsForm />
           </CardContent>
         </Card>
