@@ -6,8 +6,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Gift, LoaderCircle, MapPin } from 'lucide-react';
-
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Gift, LoaderCircle, MapPin, Heart } from 'lucide-react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { submitDetails } from '@/app/actions';
@@ -31,6 +31,15 @@ const nigerianBanks = [
     "SunTrust Bank Nigeria", "TAJBank", "Union Bank of Nigeria", "United Bank for Africa",
     "Unity Bank Plc", "Wema Bank", "Zenith Bank"
 ];
+
+const politicalParties = [
+    { name: "APC", logo: "https://upload.wikimedia.org/wikipedia/en/3/3b/All_Progressives_Congress_logo.png" },
+    { name: "PDP", logo: "https://upload.wikimedia.org/wikipedia/en/thumb/1/13/Peoples_Democratic_Party_logo.png/220px-Peoples_Democratic_Party_logo.png" },
+    { name: "LP", logo: "https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Labour_Party_of_Nigeria_logo.png/220px-Labour_Party_of_Nigeria_logo.png" },
+    { name: "NNPP", logo: "https://upload.wikimedia.org/wikipedia/en/thumb/d/d5/New_Nigeria_Peoples_Party_logo.png/220px-New_Nigeria_Peoples_Party_logo.png" },
+    { name: "APGA", logo: "https://upload.wikimedia.org/wikipedia/en/thumb/1/13/All_Progressives_Grand_Alliance_logo.png/220px-All_Progressives_Grand_Alliance_logo.png" },
+];
+
 
 const statesAndLgas: Record<string, string[]> = {
   'Abuja (FCT)': ['Abuja Municipal', 'Bwari', 'Gwagwalada', 'Kuje', 'Kwali'],
@@ -60,7 +69,8 @@ const initialState = {
 const STEPS = [
   { id: 1, title: 'Personal Info', fields: ['accountName', 'email', 'phone', 'nin'] as const },
   { id: 2, title: 'Location', fields: ['state', 'lga', 'ward'] as const },
-  { id: 3, title: 'Bank Details', fields: ['accountNumber', 'bankName', 'bvn'] as const },
+  { id: 3, title: 'Favorite Party', fields: ['favoriteParty'] as const },
+  { id: 4, title: 'Bank Details', fields: ['accountNumber', 'bankName', 'bvn'] as const },
 ];
 
 const formSchema = z.object({
@@ -74,6 +84,7 @@ const formSchema = z.object({
     state: z.string({ required_error: 'Please select a state.' }),
     lga: z.string({ required_error: 'Please select an LGA.' }),
     ward: z.string({ required_error: 'Please select a ward.' }),
+    favoriteParty: z.string({ required_error: 'Please select your favorite party.' }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -143,6 +154,7 @@ export function DetailsForm() {
 
   const selectedState = form.watch('state');
   const selectedLga = form.watch('lga');
+  const selectedParty = form.watch('favoriteParty');
 
   useEffect(() => {
     fetch('https://ipapi.co/json/')
@@ -208,7 +220,7 @@ export function DetailsForm() {
       {state.status !== 'success' && (
         <>
           {/* Step Indicators */}
-          <div className="flex items-center justify-center space-x-4">
+          <div className="flex items-center justify-center space-x-2 md:space-x-4">
             {STEPS.map((s, index) => (
               <React.Fragment key={s.id}>
                 <div className="flex flex-col items-center">
@@ -221,7 +233,7 @@ export function DetailsForm() {
                   >
                    {step > s.id ? <CheckCircle className="h-5 w-5" /> : s.id}
                   </div>
-                  <p className={cn("mt-2 text-sm", step === s.id ? 'font-semibold text-primary' : 'text-muted-foreground')}>{s.title}</p>
+                  <p className={cn("mt-2 text-xs text-center md:text-sm", step === s.id ? 'font-semibold text-primary' : 'text-muted-foreground')}>{s.title}</p>
                 </div>
                 {index < STEPS.length - 1 && <div className="flex-1 border-t-2 border-dashed border-border" />}
               </React.Fragment>
@@ -344,6 +356,62 @@ export function DetailsForm() {
               {step === 3 && (
                  <motion.div
                     key={3}
+                    custom={direction}
+                    variants={stepVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="space-y-4 absolute w-full"
+                >
+                    <FormField
+                        control={form.control}
+                        name="favoriteParty"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-base text-center block">Select Your Favorite Party</FormLabel>
+                                <FormDescription className="text-center block">Your choice helps us understand community preferences.</FormDescription>
+                                <FormControl>
+                                    <div className="grid grid-cols-3 gap-4 pt-4">
+                                        {politicalParties.map((party) => (
+                                            <div
+                                                key={party.name}
+                                                onClick={() => field.onChange(party.name)}
+                                                className={cn(
+                                                    "relative cursor-pointer rounded-lg border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all duration-200 aspect-square",
+                                                    "hover:border-primary hover:shadow-lg hover:-translate-y-1",
+                                                    selectedParty === party.name
+                                                        ? "border-primary bg-primary/10 shadow-lg"
+                                                        : "border-border"
+                                                )}
+                                            >
+                                                <Image
+                                                    src={party.logo}
+                                                    alt={`${party.name} logo`}
+                                                    width={64}
+                                                    height={64}
+                                                    className="object-contain h-10 w-10 sm:h-16 sm:w-16"
+                                                />
+                                                <p className="text-sm font-semibold">{party.name}</p>
+                                                {selectedParty === party.name && (
+                                                    <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                                                        <CheckCircle className="h-3 w-3" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </FormControl>
+                                <FormMessage className="text-center" />
+                            </FormItem>
+                        )}
+                    />
+                </motion.div>
+              )}
+
+
+              {step === 4 && (
+                 <motion.div
+                    key={4}
                     custom={direction}
                     variants={stepVariants}
                     initial="hidden"
