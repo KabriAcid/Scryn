@@ -13,12 +13,17 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col">
       <header className="container mx-auto flex h-20 items-center justify-between px-4 md:px-6">
         <Logo />
-        <Button asChild>
-          <Link href="/order">
-            <span className="sm:hidden">Request / Order</span>
-            <span className="hidden sm:block">Order cards</span>
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+            <Button asChild variant="ghost">
+                <Link href="/login">Login</Link>
+            </Button>
+          <Button asChild>
+            <Link href="/order">
+              <span className="sm:hidden">Order</span>
+              <span className="hidden sm:block">Order Cards</span>
+            </Link>
+          </Button>
+        </div>
       </header>
       <main className="flex-1">
         <section className="relative w-full py-20 md:py-32 lg:py-40">
