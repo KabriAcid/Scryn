@@ -29,7 +29,7 @@ function RedemptionsTable() {
           <TableHead className="whitespace-nowrap">Card Code</TableHead>
           <TableHead className="whitespace-nowrap">Bank</TableHead>
           <TableHead className="whitespace-nowrap">Status</TableHead>
-           <TableHead className="whitespace-nowrap"><span className="sr-only">Actions</span></TableHead>
+           <TableHead className="whitespace-nowrap">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
