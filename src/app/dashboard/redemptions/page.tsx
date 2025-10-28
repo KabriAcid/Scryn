@@ -22,26 +22,26 @@ function RedemptionsTable() {
      <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Redemption ID</TableHead>
-          <TableHead>Date</TableHead>
-          <TableHead>Citizen Name</TableHead>
-          <TableHead>Amount (₦)</TableHead>
-          <TableHead>Card Code</TableHead>
-          <TableHead>Bank</TableHead>
-          <TableHead>Status</TableHead>
+          <TableHead className="whitespace-nowrap">Redemption ID</TableHead>
+          <TableHead className="whitespace-nowrap">Date</TableHead>
+          <TableHead className="whitespace-nowrap">Citizen Name</TableHead>
+          <TableHead className="whitespace-nowrap">Amount (₦)</TableHead>
+          <TableHead className="whitespace-nowrap">Card Code</TableHead>
+          <TableHead className="whitespace-nowrap">Bank</TableHead>
+          <TableHead className="whitespace-nowrap">Status</TableHead>
+           <TableHead className="whitespace-nowrap"><span className="sr-only">Actions</span></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {redemptions.map((redemption) => (
-          <TableRow key={redemption.id} className="cursor-pointer" asChild>
-            <Link href={`/dashboard/redemptions/${redemption.id}`}>
-              <TableCell className="font-medium">{redemption.id}</TableCell>
-              <TableCell>{redemption.date}</TableCell>
-              <TableCell>{redemption.citizenName}</TableCell>
-              <TableCell>{redemption.amount.toLocaleString()}</TableCell>
-              <TableCell>{redemption.cardCode}</TableCell>
-              <TableCell>{redemption.bank}</TableCell>
-              <TableCell>
+          <TableRow key={redemption.id}>
+              <TableCell className="font-medium whitespace-nowrap">{redemption.id}</TableCell>
+              <TableCell className="whitespace-nowrap">{redemption.date}</TableCell>
+              <TableCell className="whitespace-nowrap">{redemption.citizenName}</TableCell>
+              <TableCell className="whitespace-nowrap">{redemption.amount.toLocaleString()}</TableCell>
+              <TableCell className="whitespace-nowrap">{redemption.cardCode}</TableCell>
+              <TableCell className="whitespace-nowrap">{redemption.bank}</TableCell>
+              <TableCell className="whitespace-nowrap">
                 <Badge
                   variant={
                     redemption.status === 'Completed'
@@ -59,7 +59,11 @@ function RedemptionsTable() {
                   {redemption.status}
                 </Badge>
               </TableCell>
-            </Link>
+              <TableCell className="whitespace-nowrap">
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/dashboard/redemptions/${redemption.id}`}>View Details</Link>
+                </Button>
+              </TableCell>
           </TableRow>
         ))}
       </TableBody>

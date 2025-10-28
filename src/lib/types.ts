@@ -52,5 +52,6 @@ export type Redeemer = {
     state: string;
     lga: string;
     ipAddress: string;
+    redemptionDate: string;
   };
 };
