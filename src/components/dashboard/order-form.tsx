@@ -5,7 +5,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Home, LoaderCircle, Mail, PartyPopper, Phone, Trash2, Upload, User, Wallet, Briefcase } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Home, LoaderCircle, Mail, PartyPopper, Phone, Trash2, Upload, User, Wallet, Briefcase, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -41,6 +41,15 @@ const statesAndLgas: Record<string, string[]> = {
 };
 const stateNames = Object.keys(statesAndLgas);
 
+const wardsByLga: Record<string, string[]> = {
+    'Abuja Municipal': ['City Centre', 'Garki', 'Wuse', 'Maitama', 'Asokoro', 'Guzape'],
+    'Bwari': ['Bwari Central', 'Dutse', 'Kubwa', 'Ushafa', 'Byazhin'],
+    'Ikeja': ['Alausa', 'Oregun', 'Ojodu', 'Agidingbi', 'GRA', 'Opebi'],
+    'Port Harcourt': ['Old GRA', 'New GRA', 'D-Line', 'Diobu', 'Borokiri'],
+    'Kano Municipal': ['Sabo Gari', 'Nassarawa', 'Tarauni', 'Fagge', 'Gwale'],
+    'Ibadan North': ['Agodi', 'Bodija', 'Sango', 'UI', 'Mokola'],
+};
+
 const denominations = [
   { id: '2000', label: '₦2k' },
   { id: '5000', label: '₦5k' },
@@ -68,6 +77,7 @@ const OrderSchema = z.object({
   phone: z.string().regex(/^0[789][01]\d{8}$/, { message: 'Please enter a valid Nigerian phone number.' }),
   state: z.string({ required_error: 'Please select a state.' }),
   lga: z.string({ required_error: 'Please select an LGA.' }),
+  ward: z.string({ required_error: 'Please select a ward.' }),
   orderItems: z.array(z.object({
     denomination: z.enum(denominationEnum),
     quantity: z.coerce.number().min(1, "Min 1"),
@@ -93,7 +103,7 @@ type OrderFormValues = z.infer<typeof OrderSchema>;
 
 const STEPS = [
   { id: 1, title: 'Card Customization', fields: ['title', 'politicianName', 'politicalParty', 'politicalRole', 'photo'] as const, icon: User },
-  { id: 2, title: 'Contact & Location', fields: ['email', 'phone', 'state', 'lga'] as const, icon: Home },
+  { id: 2, title: 'Contact & Location', fields: ['email', 'phone', 'state', 'lga', 'ward'] as const, icon: Home },
   { id: 3, title: 'Card Details', fields: ['orderItems'] as const, icon: Wallet },
 ];
 
@@ -177,6 +187,7 @@ export function OrderForm() {
   });
   
   const selectedState = form.watch('state');
+  const selectedLga = form.watch('lga');
 
   useEffect(() => {
     if (state.status === 'error' && state.message) {
@@ -417,6 +428,7 @@ export function OrderForm() {
                                   <Select onValueChange={(value) => {
                                       field.onChange(value);
                                       form.resetField('lga');
+                                      form.resetField('ward');
                                   }} defaultValue={field.value}>
                                       <FormControl>
                                       <SelectTrigger><SelectValue placeholder="Select your state" /></SelectTrigger>
@@ -430,8 +442,11 @@ export function OrderForm() {
                           )} />
                           <FormField control={form.control} name="lga" render={({ field }) => (
                               <FormItem>
-                                  <FormLabel>LGA (Local Government Area)</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value ?? undefined} disabled={!selectedState}>
+                                  <FormLabel>LGA (Local Government)</FormLabel>
+                                  <Select onValueChange={(value) => {
+                                    field.onChange(value);
+                                    form.resetField('ward');
+                                  }} value={field.value ?? ''} disabled={!selectedState}>
                                       <FormControl>
                                       <SelectTrigger><SelectValue placeholder="Select your LGA" /></SelectTrigger>
                                       </FormControl>
@@ -443,6 +458,20 @@ export function OrderForm() {
                               </FormItem>
                           )} />
                     </div>
+                    <FormField control={form.control} name="ward" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Ward</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={!selectedLga}>
+                                <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Select your ward" /></SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {(wardsByLga[selectedLga] || []).map(ward => (<SelectItem key={ward} value={ward}>{ward}</SelectItem>))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
                   </>
                 )}
 

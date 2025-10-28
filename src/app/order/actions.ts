@@ -18,6 +18,7 @@ const OrderSchema = z.object({
   phone: z.string().min(10, 'Invalid phone number.'),
   state: z.string().min(2, 'State is required.'),
   lga: z.string().min(2, 'LGA is required.'),
+  ward: z.string().min(2, 'Ward is required.'),
   orderItems: z.string().transform((str, ctx) => {
     try {
       const items = JSON.parse(str);
@@ -60,6 +61,7 @@ export async function createOrder(prevState: any, formData: FormData) {
     phone: formData.get('phone'),
     state: formData.get('state'),
     lga: formData.get('lga'),
+    ward: formData.get('ward'),
     orderItems: formData.get('orderItems'),
   });
 
