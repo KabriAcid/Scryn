@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CreditCard, History, LayoutDashboard, ShieldCheck } from 'lucide-react';
+import { Gift, History, LayoutDashboard, ShieldCheck } from 'lucide-react';
 import type { NavItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
-  { href: '/dashboard/orders', label: 'Card Orders', icon: CreditCard, tooltip: 'Card Orders' },
+  { href: '/dashboard/redemptions', label: 'Redemptions', icon: Gift, tooltip: 'Redemptions' },
   { href: '/dashboard/transactions', label: 'Transactions', icon: History, tooltip: 'Transactions' },
   { href: '/dashboard/fraud-detection', label: 'Fraud Detection', icon: ShieldCheck, tooltip: 'Fraud Detection' },
 ];
