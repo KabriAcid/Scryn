@@ -1,8 +1,10 @@
+import { Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, CreditCard, Users, Wallet } from 'lucide-react';
 import { AnalyticsCharts } from '@/components/dashboard/analytics-charts';
+import { DashboardSkeleton } from '@/components/dashboard/skeletons';
 
-export default function DashboardPage() {
+function DashboardContent() {
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
@@ -51,5 +53,13 @@ export default function DashboardPage() {
         <AnalyticsCharts />
       </div>
     </>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent />
+    </Suspense>
   );
 }
