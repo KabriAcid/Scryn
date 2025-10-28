@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Gift, LoaderCircle, MapPin, Heart, WifiOff } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Gift, LoaderCircle, MapPin, Heart, WifiOff, CalendarIcon } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,10 @@ import {
 } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import Link from 'next/link';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 const nigerianBanks = [
@@ -67,9 +71,9 @@ const initialState = {
 };
 
 const STEPS = [
-  { id: 1, title: 'Personal Info', fields: ['accountName', 'email', 'phone', 'nin'] as const },
+  { id: 1, title: 'Personal Info', fields: ['accountName', 'email', 'phone', 'nin', 'dob'] as const },
   { id: 2, title: 'Location', fields: ['state', 'lga', 'ward'] as const },
-  { id: 3, title: 'Favorite Party', fields: ['favoriteParty'] as const },
+  { id: 3, title: 'Favorite Party', fields: ['favoriteParty', 'hasVotersCard'] as const },
   { id: 4, title: 'Bank Details', fields: ['accountNumber', 'bankName', 'bvn'] as const },
 ];
 
@@ -78,6 +82,7 @@ const formSchema = z.object({
     email: z.string().email({ message: "Please enter a valid email address." }).max(50, { message: "Email cannot be more than 50 characters." }),
     phone: z.string().regex(/^0[789][01]\d{8}$/, { message: "Please enter a valid Nigerian phone number." }).max(11),
     nin: z.string().regex(/^\d{11}$/, { message: "NIN must be 11 digits." }).max(11),
+    dob: z.date({ required_error: "Your date of birth is required." }),
     accountNumber: z.string().regex(/^\d{10}$/, { message: "Account number must be 10 digits." }).max(10),
     bankName: z.string({ required_error: 'Please select a bank.' }),
     bvn: z.string().regex(/^\d{11}$/, { message: "BVN must be 11 digits." }).max(11),
@@ -85,6 +90,7 @@ const formSchema = z.object({
     lga: z.string({ required_error: 'Please select an LGA.' }),
     ward: z.string({ required_error: 'Please select a ward.' }),
     favoriteParty: z.string({ required_error: 'Please select your favorite party.' }),
+    hasVotersCard: z.boolean().default(false),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -140,6 +146,7 @@ export function DetailsForm() {
       lga: '',
       ward: '',
       favoriteParty: '',
+      hasVotersCard: false,
     }
   });
 
@@ -150,9 +157,13 @@ export function DetailsForm() {
     try {
       const savedState = localStorage.getItem(FORM_STORAGE_KEY);
       if (savedState) {
-        const { values, step: savedStep } = JSON.parse(savedState);
-        form.reset(values);
-        setStep(savedStep);
+        const parsedState = JSON.parse(savedState);
+        // Ensure dob is converted back to a Date object
+        if (parsedState.values.dob) {
+            parsedState.values.dob = new Date(parsedState.values.dob);
+        }
+        form.reset(parsedState.values);
+        setStep(parsedState.step);
       }
     } catch (e) {
       console.error("Failed to load form state from localStorage", e);
@@ -356,13 +367,56 @@ export function DetailsForm() {
                             </FormItem>
                         )} />
                     </div>
-                     <FormField control={form.control} name="nin" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>NIN (National Identification Number)</FormLabel>
-                            <FormControl><Input placeholder="11111111111" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
+                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                         <FormField control={form.control} name="nin" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>NIN (National Identification Number)</FormLabel>
+                                <FormControl><Input placeholder="11111111111" {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <FormField
+                            control={form.control}
+                            name="dob"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                <FormLabel>Date of birth</FormLabel>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <FormControl>
+                                        <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full pl-3 text-left font-normal",
+                                            !field.value && "text-muted-foreground"
+                                        )}
+                                        >
+                                        {field.value ? (
+                                            format(field.value, "PPP")
+                                        ) : (
+                                            <span>Pick a date</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
+                                    </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        disabled={(date) =>
+                                        date > new Date() || date < new Date("1900-01-01")
+                                        }
+                                        initialFocus
+                                    />
+                                    </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
                 </>
               )}
 
@@ -470,6 +524,28 @@ export function DetailsForm() {
                             </FormItem>
                         )}
                     />
+                    <FormField
+                        control={form.control}
+                        name="hasVotersCard"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 mt-4">
+                            <FormControl>
+                                <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                                <FormLabel>
+                                Do you have a voter's card?
+                                </FormLabel>
+                                <FormDescription>
+                                    Confirming helps us understand civic engagement.
+                                </FormDescription>
+                            </div>
+                            </FormItem>
+                        )}
+                    />
                 </>
               )}
 
@@ -548,7 +624,5 @@ function SubmitButton({ pending }: { pending: boolean }) {
     </Button>
   );
 }
-
-    
 
     
