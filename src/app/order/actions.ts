@@ -1,7 +1,6 @@
 'use server';
 
 import { z } from 'zod';
-import { redirect } from 'next/navigation';
 import { orderVerificationAI } from '@/ai/flows/order-verification-ai';
 
 const OrderItemSchema = z.object({
@@ -101,8 +100,10 @@ export async function createOrder(prevState: any, formData: FormData) {
     // In a real app, you would handle the file upload here for formData.get('photo').
   });
 
-  // On success, redirect to the dashboard.
-  redirect('/dashboard');
+  return {
+    status: 'success',
+    message: 'Order placed successfully! Please check your email for confirmation.'
+  }
 }
 
     

@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { DenominationPicker } from '../ui/form-elements/denomination-picker';
 import { QuantityInput } from '../ui/form-elements/quantity-input';
 import { Card } from '../ui/card';
+import { useRouter } from 'next/navigation';
 
 const politicalParties = ["ACN", "PDP", "APC", "LP", "NNPP", "APGA"];
 const titles = ["Hon.", "Chief", "Dr.", "Mr.", "Mrs.", "Ms."];
@@ -54,7 +55,7 @@ const denominations = [
   { id: '2000', label: '₦2k' },
   { id: '5000', label: '₦5k' },
   { id: '10000', label: '₦10k' },
-  { id: '20000', label: '₦20k' },
+  { id: '20000', 'label': '₦20k' },
   { id: '50000', label: '₦50k' },
   { id: '100000', label: '₦100k' },
   { id: '200000', label: '₦200k' },
@@ -140,6 +141,7 @@ const FORM_STORAGE_KEY = 'scryn-order-form';
 export function OrderForm() {
   const [state, formAction, isPending] = useActionState(createOrder, initialState);
   const { toast } = useToast();
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -197,7 +199,18 @@ export function OrderForm() {
         description: state.message,
       });
     }
-  }, [state, toast]);
+
+    if (state.status === 'success' && state.message) {
+      toast({
+        title: 'Order Successful!',
+        description: state.message,
+      });
+      // Redirect to dashboard after a short delay to allow toast to be seen
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1000);
+    }
+  }, [state, toast, router]);
 
   const nextStep = async () => {
     const fields = STEPS[step - 1].fields;

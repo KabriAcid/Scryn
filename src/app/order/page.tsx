@@ -27,7 +27,7 @@ export default function NewOrderPage() {
                     Fill out the form below to place a new order for scratch cards. After your order, you'll get access to your dashboard.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="p-2 sm:p-6">
+            <CardContent>
                 <OrderForm />
             </CardContent>
         </Card>
