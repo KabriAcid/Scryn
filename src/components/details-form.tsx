@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Gift, LoaderCircle, MapPin, Heart } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Gift, LoaderCircle, MapPin, Heart, WifiOff } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import Link from 'next/link';
 
 
@@ -51,12 +51,12 @@ const statesAndLgas: Record<string, string[]> = {
 const stateNames = Object.keys(statesAndLgas);
 
 const wardsByLga: Record<string, string[]> = {
-    'Abuja Municipal': ['City Centre', 'Garki', 'Wuse', 'Maitama'],
-    'Bwari': ['Bwari Central', 'Dutse', 'Kubwa', 'Ushafa'],
-    'Ikeja': ['Alausa', 'Oregun', 'Ojodu', 'Agidingbi'],
-    'Port Harcourt': ['Old GRA', 'New GRA', 'D-Line', 'Diobu'],
-    'Kano Municipal': ['Sabo Gari', 'Nassarawa', 'Tarauni'],
-    'Ibadan North': ['Agodi', 'Bodija', 'Sango', 'UI'],
+    'Abuja Municipal': ['City Centre', 'Garki', 'Wuse', 'Maitama', 'Asokoro', 'Guzape'],
+    'Bwari': ['Bwari Central', 'Dutse', 'Kubwa', 'Ushafa', 'Byazhin'],
+    'Ikeja': ['Alausa', 'Oregun', 'Ojodu', 'Agidingbi', 'GRA', 'Opebi'],
+    'Port Harcourt': ['Old GRA', 'New GRA', 'D-Line', 'Diobu', 'Borokiri'],
+    'Kano Municipal': ['Sabo Gari', 'Nassarawa', 'Tarauni', 'Fagge', 'Gwale'],
+    'Ibadan North': ['Agodi', 'Bodija', 'Sango', 'UI', 'Mokola'],
 };
 
 const FORM_STORAGE_KEY = 'scryn-details-form';
@@ -89,6 +89,8 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+type LocationPermissionStatus = 'idle' | 'requesting' | 'granted' | 'denied';
+
 const stepVariants = {
   hidden: (direction: number) => ({
     opacity: 0,
@@ -117,6 +119,8 @@ export function DetailsForm() {
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
 
+  const [locationPermission, setLocationPermission] = useState<LocationPermissionStatus>('idle');
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [ipAddress, setIpAddress] = useState('');
   const [ipLocation, setIpLocation] = useState('');
   const [coords, setCoords] = useState<{lat: number, long: number} | null>(null);
@@ -142,6 +146,7 @@ export function DetailsForm() {
   const watchedValues = form.watch();
 
   useEffect(() => {
+    if (locationPermission !== 'granted') return;
     try {
       const savedState = localStorage.getItem(FORM_STORAGE_KEY);
       if (savedState) {
@@ -152,9 +157,10 @@ export function DetailsForm() {
     } catch (e) {
       console.error("Failed to load form state from localStorage", e);
     }
-  }, [form]);
+  }, [form, locationPermission]);
 
   useEffect(() => {
+    if (locationPermission !== 'granted') return;
     try {
       const stateToSave = {
         values: watchedValues,
@@ -164,14 +170,16 @@ export function DetailsForm() {
     } catch (e) {
        console.error("Failed to save form state to localStorage", e);
     }
-  }, [watchedValues, step]);
+  }, [watchedValues, step, locationPermission]);
 
   const selectedState = form.watch('state');
   const selectedLga = form.watch('lga');
   const selectedParty = form.watch('favoriteParty');
+  
+  const requestLocationPermission = () => {
+    setLocationPermission('requesting');
+    setLocationError(null);
 
-  useEffect(() => {
-    // Precise location with user permission
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -179,18 +187,19 @@ export function DetailsForm() {
             lat: position.coords.latitude,
             long: position.coords.longitude
           });
+          setLocationPermission('granted');
         },
         (error) => {
           console.warn(`Geolocation error (${error.code}): ${error.message}`);
-          // Fallback to IP-based location if permission denied
-          fetchIpLocation();
+          setLocationPermission('denied');
+          setLocationError('Location access is required. Please enable it in your browser settings and try again.');
         }
       );
     } else {
-      console.log('Geolocation not available, falling back to IP-based location.');
-      fetchIpLocation();
+      setLocationPermission('denied');
+      setLocationError('Geolocation is not supported by your browser. Please use a different browser.');
     }
-  }, []);
+  };
 
   const fetchIpLocation = () => {
     fetch('https://ipapi.co/json/')
@@ -206,6 +215,10 @@ export function DetailsForm() {
       });
   };
   
+  useEffect(() => {
+    fetchIpLocation();
+  }, []);
+
   const nextStep = async () => {
     const fields = STEPS[step - 1].fields;
     const output = await form.trigger(fields, { shouldFocus: true });
@@ -227,6 +240,36 @@ export function DetailsForm() {
         console.error("Failed to clear form state from localStorage", e);
     }
     formAction(formData);
+  }
+
+  if (locationPermission !== 'granted') {
+    return (
+      <div className="flex flex-col items-center justify-center text-center space-y-4 p-6 min-h-[500px]">
+        <MapPin className="h-16 w-16 text-primary" />
+        <h2 className="text-2xl font-bold">Location Access Required</h2>
+        <p className="text-muted-foreground max-w-sm">
+          To prevent fraud and ensure fair distribution, we need to verify your location. Please grant access to continue.
+        </p>
+        <Button 
+          onClick={requestLocationPermission} 
+          disabled={locationPermission === 'requesting'}
+          size="lg"
+        >
+          {locationPermission === 'requesting' ? (
+            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            'Allow Location Access'
+          )}
+        </Button>
+        {locationError && (
+          <Alert variant="destructive" className="mt-4 text-left">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Permission Denied</AlertTitle>
+            <AlertDescription>{locationError}</AlertDescription>
+          </Alert>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -505,5 +548,7 @@ function SubmitButton({ pending }: { pending: boolean }) {
     </Button>
   );
 }
+
+    
 
     
