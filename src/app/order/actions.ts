@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
+import { orderVerificationAI } from '@/ai/flows/order-verification-ai';
 
 const OrderItemSchema = z.object({
   denomination: z.string(),
@@ -70,6 +71,26 @@ export async function createOrder(prevState: any, formData: FormData) {
     };
   }
 
+  // AI Verification
+  try {
+    const verificationInput = {
+      politicianName: validatedFields.data.politicianName,
+      politicalParty: validatedFields.data.politicalParty,
+      politicalRole: validatedFields.data.politicalRole,
+      email: validatedFields.data.email,
+      phone: validatedFields.data.phone,
+      orderItems: JSON.stringify(validatedFields.data.orderItems)
+    };
+    const verificationResult = await orderVerificationAI(verificationInput);
+    console.log('AI Order Verification Result:', verificationResult);
+    // You can add logic here based on the verification score
+    // For example, if score is too low, you might flag the order.
+  } catch (aiError) {
+    console.error('AI verification failed:', aiError);
+    // Decide if you want to block the order or just log the error
+  }
+
+
   // Simulate network delay and processing
   await new Promise(resolve => setTimeout(resolve, 1500));
 
@@ -81,3 +102,5 @@ export async function createOrder(prevState: any, formData: FormData) {
   // On success, redirect to the dashboard.
   redirect('/dashboard');
 }
+
+    

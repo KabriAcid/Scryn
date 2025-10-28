@@ -63,7 +63,7 @@ const OrderSchema = z.object({
   politicianName: z.string().min(3, 'Name must be at least 3 characters.'),
   politicalParty: z.string({ required_error: "Please select a political party." }),
   politicalRole: z.string({ required_error: 'Please select a political role.' }),
-  photo: z.any().refine(file => file instanceof File, 'A photo is required.'),
+  photo: z.any().optional(),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   phone: z.string().regex(/^0[789][01]\d{8}$/, { message: 'Please enter a valid Nigerian phone number.' }),
   state: z.string({ required_error: 'Please select a state.' }),
@@ -125,6 +125,8 @@ const stepVariants = {
   }),
 };
 
+const FORM_STORAGE_KEY = 'scryn-order-form';
+
 export function OrderForm() {
   const [state, formAction, isPending] = useActionState(createOrder, initialState);
   const { toast } = useToast();
@@ -135,16 +137,38 @@ export function OrderForm() {
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(OrderSchema),
     mode: 'onChange',
-    defaultValues: {
-      orderItems: [],
-      politicianName: '',
-      politicalRole: undefined,
-      email: '',
-      phone: '',
-      state: undefined,
-      lga: undefined,
-    },
   });
+  
+  const watchedValues = form.watch();
+
+  useEffect(() => {
+    try {
+      const savedState = localStorage.getItem(FORM_STORAGE_KEY);
+      if (savedState) {
+        const { values, step: savedStep } = JSON.parse(savedState);
+        form.reset(values);
+        setStep(savedStep);
+        if (values.photo && typeof values.photo === 'string') {
+          setPhotoPreview(values.photo);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load form state from localStorage", e);
+    }
+  }, [form]);
+
+  useEffect(() => {
+    try {
+      const stateToSave = {
+        values: { ...watchedValues, photo: photoPreview },
+        step,
+      };
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(stateToSave));
+    } catch (e) {
+       console.error("Failed to save form state to localStorage", e);
+    }
+  }, [watchedValues, step, photoPreview]);
+
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -181,10 +205,11 @@ export function OrderForm() {
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      form.setValue('photo', file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPhotoPreview(reader.result as string);
+        // We can't store the file object in localStorage, so we store the data URL
+        form.setValue('photo', reader.result as string, { shouldValidate: true });
       };
       reader.readAsDataURL(file);
     }
@@ -206,13 +231,23 @@ export function OrderForm() {
   const totalQuantity = watchedOrderItems.reduce((acc, item) => acc + (Number(item.quantity) || 0), 0);
   const totalValue = watchedOrderItems.reduce((acc, item) => acc + (parseInt(item.denomination) * (Number(item.quantity) || 0)), 0);
 
+  const handleFormSubmit = (formData: FormData) => {
+    const orderItems = form.getValues('orderItems');
+    formData.append('orderItems', JSON.stringify(orderItems));
+    
+    // Clear storage before submitting
+    try {
+        localStorage.removeItem(FORM_STORAGE_KEY);
+    } catch(e) {
+        console.error("Failed to clear form state from localStorage", e);
+    }
+
+    formAction(formData);
+  }
+
   return (
     <Form {...form}>
-      <form action={(formData) => {
-          const orderItems = form.getValues('orderItems');
-          formData.append('orderItems', JSON.stringify(orderItems));
-          formAction(formData);
-      }} className="space-y-6 max-w-lg mx-auto">
+      <form action={handleFormSubmit} className="space-y-6 max-w-lg mx-auto">
         {state.status === 'error' && state.message && (
             <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -331,7 +366,7 @@ export function OrderForm() {
                                           <p className="mb-2 text-sm">Upload photo</p>
                                       </div>
                                   )}
-                                  <Input type="file" className="hidden" accept="image/png, image/jpeg" onChange={handlePhotoChange} name="photo" />
+                                  <Input type="file" className="hidden" accept="image/png, image/jpeg" onChange={handlePhotoChange} />
                               </label>
                           </FormControl>
                           <FormMessage className="text-center" />
@@ -521,3 +556,5 @@ function SubmitButton({ pending }: { pending: boolean }) {
     </Button>
   );
 }
+
+    
