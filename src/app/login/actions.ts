@@ -25,18 +25,7 @@ export async function login(prevState: any, formData: FormData) {
   // Simulate network delay and processing
   await new Promise(resolve => setTimeout(resolve, 1000));
 
-  // Dummy user data check
-  const { email, password } = validatedFields.data;
-
-  // In a real app, you would check against a database
-  if (email === 'test@example.com' && password === 'password') {
-    // On success, redirect to the dashboard.
-    redirect('/dashboard');
-  } else {
-    // On failure, return an error message
-    return {
-      status: 'error',
-      message: 'Invalid email or password.',
-    };
-  }
+  // For now, we'll bypass the credential check and redirect to the dashboard
+  // as long as the schema validation passes.
+  redirect('/dashboard');
 }
