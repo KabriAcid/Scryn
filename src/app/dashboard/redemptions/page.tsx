@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { TableSkeleton } from '@/components/dashboard/skeletons';
-import { useRouter } from 'next/navigation';
 
 const redemptions: Redemption[] = [
   { id: 'RED-001', date: '2024-03-20', amount: 5000, status: 'Completed', citizenName: 'Aisha Bello', cardCode: '****-1234', bank: 'Zenith Bank' },
