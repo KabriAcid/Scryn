@@ -22,7 +22,7 @@ function RedemptionsTable() {
      <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="whitespace-nowrap">Redemption ID</TableHead>
+          <TableHead className="whitespace-nowrap">S/N</TableHead>
           <TableHead className="whitespace-nowrap">Date</TableHead>
           <TableHead className="whitespace-nowrap">Citizen Name</TableHead>
           <TableHead className="whitespace-nowrap">Amount (₦)</TableHead>
@@ -103,7 +103,7 @@ export default function RedemptionsPage() {
             <CardDescription>An overview of all card redemptions.</CardDescription>
         </CardHeader>
         <CardContent>
-            <Suspense fallback={<TableSkeleton numRows={5} numCells={7} />}>
+            <Suspense fallback={<TableSkeleton numRows={5} numCells={8} />}>
             <RedemptionsTable />
             </Suspense>
         </CardContent>

@@ -72,7 +72,7 @@ export default function RedemptionDetailsPage({ params }: { params: { id: string
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Redemption Details: {redeemer.id}</CardTitle>
+        <CardTitle>S/N: {redeemer.id}</CardTitle>
         <CardDescription>Detailed information for this redemption record.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
