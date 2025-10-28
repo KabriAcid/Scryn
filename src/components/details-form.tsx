@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useActionState, useEffect, useState } from 'react';
@@ -5,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Gift, LoaderCircle } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, Gift, LoaderCircle, MapPin } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +41,16 @@ const statesAndLgas: Record<string, string[]> = {
 };
 const stateNames = Object.keys(statesAndLgas);
 
+const wardsByLga: Record<string, string[]> = {
+    'Abuja Municipal': ['City Centre', 'Garki', 'Wuse', 'Maitama'],
+    'Ikeja': ['Alausa', 'Oregun', 'Ojodu', 'Agidingbi'],
+    'Port Harcourt': ['Old GRA', 'New GRA', 'D-Line', 'Diobu'],
+    'Kano Municipal': ['Sabo Gari', 'Nassarawa', 'Tarauni'],
+    'Ibadan North': ['Agodi', 'Bodija', 'Sango', 'UI'],
+};
+
+const FORM_STORAGE_KEY = 'scryn-details-form';
+
 const initialState = {
   message: '',
   status: 'idle' as 'idle' | 'success' | 'error',
@@ -48,7 +59,7 @@ const initialState = {
 const STEPS = [
   { id: 1, title: 'Personal Info', fields: ['accountName', 'email', 'phone', 'nin'] as const },
   { id: 2, title: 'Bank Details', fields: ['accountNumber', 'bankName', 'bvn'] as const },
-  { id: 3, title: 'Location', fields: ['state', 'lga'] as const },
+  { id: 3, title: 'Location', fields: ['state', 'lga', 'ward'] as const },
 ];
 
 const formSchema = z.object({
@@ -61,6 +72,7 @@ const formSchema = z.object({
     bvn: z.string().regex(/^\d{11}$/, { message: "BVN must be 11 digits." }).max(11),
     state: z.string({ required_error: 'Please select a state.' }),
     lga: z.string({ required_error: 'Please select an LGA.' }),
+    ward: z.string({ required_error: 'Please select a ward.' }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -99,20 +111,37 @@ export function DetailsForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     mode: 'onTouched',
-    defaultValues: {
-        accountName: '',
-        email: '',
-        phone: '',
-        nin: '',
-        accountNumber: '',
-        bankName: undefined,
-        bvn: '',
-        state: undefined,
-        lga: undefined,
-    }
   });
 
+  const watchedValues = form.watch();
+
+  useEffect(() => {
+    try {
+      const savedState = localStorage.getItem(FORM_STORAGE_KEY);
+      if (savedState) {
+        const { values, step: savedStep } = JSON.parse(savedState);
+        form.reset(values);
+        setStep(savedStep);
+      }
+    } catch (e) {
+      console.error("Failed to load form state from localStorage", e);
+    }
+  }, [form]);
+
+  useEffect(() => {
+    try {
+      const stateToSave = {
+        values: watchedValues,
+        step,
+      };
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(stateToSave));
+    } catch (e) {
+       console.error("Failed to save form state to localStorage", e);
+    }
+  }, [watchedValues, step]);
+
   const selectedState = form.watch('state');
+  const selectedLga = form.watch('lga');
 
   useEffect(() => {
     fetch('https://ipapi.co/json/')
@@ -136,14 +165,24 @@ export function DetailsForm() {
     setDirection(1);
     setStep(prev => (prev < STEPS.length ? prev + 1 : prev));
   };
+
   const prevStep = () => {
     setDirection(-1);
     setStep(prev => (prev > 1 ? prev - 1 : prev));
   };
+  
+  const handleFormSubmit = (formData: FormData) => {
+    try {
+        localStorage.removeItem(FORM_STORAGE_KEY);
+    } catch(e) {
+        console.error("Failed to clear form state from localStorage", e);
+    }
+    formAction(formData);
+  }
 
   return (
     <Form {...form}>
-    <form action={formAction} className="space-y-8 overflow-hidden">
+    <form action={handleFormSubmit} className="space-y-8 overflow-hidden">
       {state.status !== 'idle' && state.message && (
         <Alert variant={state.status === 'error' ? 'destructive' : 'default'} className={cn(
           'flex flex-col items-center justify-center text-center p-6 space-y-4',
@@ -293,6 +332,7 @@ export function DetailsForm() {
                                 <Select onValueChange={(value) => {
                                     field.onChange(value);
                                     form.resetField('lga');
+                                    form.resetField('ward');
                                 }} defaultValue={field.value}>
                                     <FormControl>
                                     <SelectTrigger><SelectValue placeholder="Select your state" /></SelectTrigger>
@@ -306,8 +346,11 @@ export function DetailsForm() {
                         )} />
                         <FormField control={form.control} name="lga" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>LGA (Local Government Area)</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value} disabled={!selectedState}>
+                                <FormLabel>LGA (Local Government)</FormLabel>
+                                <Select onValueChange={(value) => {
+                                  field.onChange(value);
+                                  form.resetField('ward');
+                                }} value={field.value ?? ''} disabled={!selectedState}>
                                     <FormControl>
                                     <SelectTrigger><SelectValue placeholder="Select your LGA" /></SelectTrigger>
                                     </FormControl>
@@ -319,6 +362,24 @@ export function DetailsForm() {
                             </FormItem>
                         )} />
                   </div>
+                   <FormField control={form.control} name="ward" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Ward</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value ?? ''} disabled={!selectedLga}>
+                                <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Select your ward" /></SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {(wardsByLga[selectedLga] || []).map(ward => (<SelectItem key={ward} value={ward}>{ward}</SelectItem>))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                  <div className="text-sm text-muted-foreground pt-4 flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    <span>Your location helps us verify your redemption.</span>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -326,9 +387,9 @@ export function DetailsForm() {
           
           <div className="flex justify-between pt-8">
             {step > 1 ? (
-              <Button type="button" variant="outline" onClick={prevStep}><ArrowLeft /> Previous</Button>
+              <Button type="button" variant="outline" onClick={prevStep}><ArrowLeft className="mr-2 h-4 w-4" /> Previous</Button>
             ) : <div />}
-            {step < STEPS.length && <Button type="button" onClick={nextStep} className="ml-auto">Next <ArrowRight /></Button>}
+            {step < STEPS.length && <Button type="button" onClick={nextStep} className="ml-auto">Next <ArrowRight className="ml-2 h-4 w-4" /></Button>}
             {step === STEPS.length && <SubmitButton pending={isPending} />}
           </div>
         </>
@@ -346,14 +407,16 @@ function SubmitButton({ pending }: { pending: boolean }) {
     <Button type="submit" className="w-full sm:w-auto ml-auto" disabled={pending}>
       {pending ? (
         <>
-          <LoaderCircle className="animate-spin" />
+          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
           Submitting...
         </>
       ) : (
         <>
-          Complete Redemption <CheckCircle />
+          Complete Redemption <CheckCircle className="ml-2 h-4 w-4" />
         </>
       )}
     </Button>
   );
 }
+
+    
