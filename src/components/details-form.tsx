@@ -123,6 +123,19 @@ export function DetailsForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     mode: 'onTouched',
+    defaultValues: {
+      accountName: '',
+      email: '',
+      phone: '',
+      nin: '',
+      accountNumber: '',
+      bankName: '',
+      bvn: '',
+      state: '',
+      lga: '',
+      ward: '',
+      favoriteParty: '',
+    }
   });
 
   const watchedValues = form.watch();
