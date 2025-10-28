@@ -337,29 +337,29 @@ export function DetailsForm() {
                             <FormMessage />
                         </FormItem>
                     )} />
+                    <FormField control={form.control} name="email" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Email Address</FormLabel>
+                            <FormControl><Input type="email" placeholder="you@example.com" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <FormField control={form.control} name="email" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Email Address</FormLabel>
-                                <FormControl><Input type="email" placeholder="you@example.com" {...field} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <FormField control={form.control} name="phone" render={({ field }) => (
+                         <FormField control={form.control} name="phone" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Phone Number</FormLabel>
                                 <FormControl><Input type="tel" placeholder="08012345678" {...field} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )} />
+                        <FormField control={form.control} name="nin" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>NIN (National Identification Number)</FormLabel>
+                                <FormControl><Input placeholder="11111111111" {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
                     </div>
-                     <FormField control={form.control} name="nin" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>NIN (National Identification Number)</FormLabel>
-                            <FormControl><Input placeholder="11111111111" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
                     <FormField
                         control={form.control}
                         name="dob"
@@ -583,8 +583,3 @@ function SubmitButton({ pending }: { pending: boolean }) {
     </Button>
   );
 }
-
-    
-    
-
-    
