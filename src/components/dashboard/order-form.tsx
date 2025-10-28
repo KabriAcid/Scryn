@@ -228,8 +228,8 @@ export function OrderForm() {
   const selectedDenominations = fields.map(f => f.denomination);
   
   const watchedOrderItems = form.watch('orderItems');
-  const totalQuantity = watchedOrderItems.reduce((acc, item) => acc + (Number(item.quantity) || 0), 0);
-  const totalValue = watchedOrderItems.reduce((acc, item) => acc + (parseInt(item.denomination) * (Number(item.quantity) || 0)), 0);
+  const totalQuantity = (watchedOrderItems || []).reduce((acc, item) => acc + (Number(item.quantity) || 0), 0);
+  const totalValue = (watchedOrderItems || []).reduce((acc, item) => acc + (parseInt(item.denomination) * (Number(item.quantity) || 0)), 0);
 
   const handleFormSubmit = (formData: FormData) => {
     const orderItems = form.getValues('orderItems');
@@ -327,7 +327,8 @@ export function OrderForm() {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a political party" />
+                              <PartyPopper className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <SelectValue placeholder="Select a political party" className="pl-10" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
