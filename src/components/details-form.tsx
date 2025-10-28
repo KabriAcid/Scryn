@@ -239,7 +239,26 @@ export function DetailsForm() {
     formAction(formData);
   }
 
-  if (locationPermission !== 'granted') {
+  const dobValue = form.watch('dob');
+  const [day, setDay] = useState<string | undefined>(
+    dobValue ? String(dobValue.getDate()) : undefined
+  );
+  const [month, setMonth] = useState<string | undefined>(
+    dobValue ? String(dobValue.getMonth()) : undefined
+  );
+  const [year, setYear] = useState<string | undefined>(
+    dobValue ? String(dobValue.getFullYear()) : undefined
+  );
+
+  useEffect(() => {
+    if (day && month && year) {
+      const newDate = new Date(Number(year), Number(month), Number(day));
+      form.setValue('dob', newDate, { shouldValidate: true });
+    }
+  }, [day, month, year, form]);
+
+
+  if (locationPermission === 'idle' || locationPermission === 'requesting') {
     return (
       <div className="flex flex-col items-center justify-center text-center space-y-4 p-6 min-h-[500px]">
         <MapPin className="h-16 w-16 text-primary" />
@@ -268,6 +287,26 @@ export function DetailsForm() {
       </div>
     );
   }
+
+  if (locationPermission === 'denied') {
+    return (
+         <div className="flex flex-col items-center justify-center text-center space-y-4 p-6 min-h-[500px]">
+             <WifiOff className="h-16 w-16 text-destructive" />
+             <h2 className="text-2xl font-bold">Location Access Denied</h2>
+             <p className="text-muted-foreground max-w-sm">
+                 We couldn't get your location. Please enable location services in your browser settings and refresh the page.
+             </p>
+              {locationError && (
+                <Alert variant="destructive" className="mt-4 text-left">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{locationError}</AlertDescription>
+                </Alert>
+            )}
+         </div>
+    )
+  }
+
 
   return (
     <Form {...form}>
@@ -364,15 +403,18 @@ export function DetailsForm() {
                         control={form.control}
                         name="dob"
                         render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                            <FormLabel>DOB</FormLabel>
-                            <DobPicker
-                                value={field.value}
-                                onChange={field.onChange}
-                                required
-                                disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
-                            />
-                            <FormMessage />
+                            <FormItem>
+                                <FormLabel>DOB</FormLabel>
+                                <DobPicker
+                                    day={day}
+                                    month={month}
+                                    year={year}
+                                    onDayChange={setDay}
+                                    onMonthChange={setMonth}
+                                    onYearChange={setYear}
+                                    required
+                                />
+                                <FormMessage />
                             </FormItem>
                         )}
                     />
