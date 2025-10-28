@@ -353,31 +353,29 @@ export function DetailsForm() {
                             </FormItem>
                         )} />
                     </div>
-                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                         <FormField control={form.control} name="nin" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>NIN (National Identification Number)</FormLabel>
-                                <FormControl><Input placeholder="11111111111" {...field} /></FormControl>
-                                <FormMessage />
+                     <FormField control={form.control} name="nin" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>NIN (National Identification Number)</FormLabel>
+                            <FormControl><Input placeholder="11111111111" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                    <FormField
+                        control={form.control}
+                        name="dob"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                            <FormLabel>Date of birth</FormLabel>
+                            <DobPicker
+                                value={field.value}
+                                onChange={field.onChange}
+                                required
+                                disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
+                            />
+                            <FormMessage />
                             </FormItem>
-                        )} />
-                        <FormField
-                            control={form.control}
-                            name="dob"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                <FormLabel>Date of birth</FormLabel>
-                                <DobPicker
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    required
-                                    disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
-                                />
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
+                        )}
+                    />
                 </>
               )}
 
@@ -587,4 +585,6 @@ function SubmitButton({ pending }: { pending: boolean }) {
 }
 
     
+    
+
     
