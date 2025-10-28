@@ -1,7 +1,8 @@
+
 import { Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, CreditCard, Users, Wallet } from 'lucide-react';
-import { AnalyticsCharts } from '@/components/dashboard/analytics-charts';
+import { RedemptionOverviewChart, GeographicDistributionChart } from '@/components/dashboard/analytics-charts';
 import { DashboardSkeleton } from '@/components/dashboard/skeletons';
 
 function DashboardContent() {
@@ -50,7 +51,8 @@ function DashboardContent() {
         </Card>
       </div>
       <div className="grid gap-4 md:gap-8 lg:grid-cols-2">
-        <AnalyticsCharts />
+        <RedemptionOverviewChart />
+        <GeographicDistributionChart />
       </div>
     </>
   );
