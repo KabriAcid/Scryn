@@ -61,8 +61,6 @@ const wardsByLga: Record<string, string[]> = {
     'Ibadan North': ['Agodi', 'Bodija', 'Sango', 'UI', 'Mokola'],
 };
 
-const FORM_STORAGE_KEY = 'scryn-details-form';
-
 const initialState = {
   message: '',
   status: 'idle' as 'idle' | 'success' | 'error',
@@ -151,67 +149,59 @@ export function DetailsForm() {
     }
   });
 
-  const watchedValues = form.watch();
-
-  useEffect(() => {
-    if (locationPermission !== 'granted') return;
-    try {
-      const savedState = localStorage.getItem(FORM_STORAGE_KEY);
-      if (savedState) {
-        const parsedState = JSON.parse(savedState);
-        // Ensure dob is converted back to a Date object
-        if (parsedState.values.dob) {
-            parsedState.values.dob = new Date(parsedState.values.dob);
-        }
-        form.reset(parsedState.values);
-        setStep(parsedState.step);
-      }
-    } catch (e) {
-      console.error("Failed to load form state from localStorage", e);
-    }
-  }, [form, locationPermission]);
-
-  useEffect(() => {
-    if (locationPermission !== 'granted') return;
-    try {
-      const stateToSave = {
-        values: watchedValues,
-        step,
-      };
-      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(stateToSave));
-    } catch (e) {
-       console.error("Failed to save form state to localStorage", e);
-    }
-  }, [watchedValues, step, locationPermission]);
-
   const selectedState = form.watch('state');
   const selectedLga = form.watch('lga');
   const selectedParty = form.watch('favoriteParty');
   
+  const handleLocationSuccess = (position: GeolocationPosition) => {
+    setCoords({
+      lat: position.coords.latitude,
+      long: position.coords.longitude
+    });
+    setLocationPermission('granted');
+    setLocationError(null);
+  };
+  
+  const handleLocationError = (error: GeolocationPositionError) => {
+    console.warn(`Geolocation error (${error.code}): ${error.message}`);
+    setLocationPermission('denied');
+    setLocationError('Location access is required. Please enable it in your browser settings and try again.');
+  };
+
   const requestLocationPermission = () => {
     setLocationPermission('requesting');
     setLocationError(null);
 
     if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setCoords({
-            lat: position.coords.latitude,
-            long: position.coords.longitude
-          });
-          setLocationPermission('granted');
-        },
-        (error) => {
-          console.warn(`Geolocation error (${error.code}): ${error.message}`);
-          setLocationPermission('denied');
-          setLocationError('Location access is required. Please enable it in your browser settings and try again.');
-        }
-      );
+      navigator.geolocation.getCurrentPosition(handleLocationSuccess, handleLocationError);
     } else {
       setLocationPermission('denied');
       setLocationError('Geolocation is not supported by your browser. Please use a different browser.');
     }
   };
+
+  useEffect(() => {
+    if ('geolocation' in navigator && 'permissions' in navigator) {
+      navigator.permissions.query({ name: 'geolocation' }).then(permissionStatus => {
+        if (permissionStatus.state === 'granted') {
+           navigator.geolocation.getCurrentPosition(handleLocationSuccess, handleLocationError);
+        } else {
+          // Stay idle, wait for user to click button
+          setLocationPermission('idle');
+        }
+        permissionStatus.onchange = () => {
+          if (permissionStatus.state === 'granted') {
+             navigator.geolocation.getCurrentPosition(handleLocationSuccess, handleLocationError);
+          } else {
+            setLocationPermission('denied');
+          }
+        };
+      });
+    } else {
+      // Fallback for older browsers
+      setLocationPermission('idle');
+    }
+  }, []);
 
   const fetchIpLocation = () => {
     fetch('https://ipapi.co/json/')
@@ -246,11 +236,6 @@ export function DetailsForm() {
   };
   
   const handleFormSubmit = (formData: FormData) => {
-    try {
-        localStorage.removeItem(FORM_STORAGE_KEY);
-    } catch(e) {
-        console.error("Failed to clear form state from localStorage", e);
-    }
     formAction(formData);
   }
 
@@ -601,4 +586,5 @@ function SubmitButton({ pending }: { pending: boolean }) {
   );
 }
 
+    
     
