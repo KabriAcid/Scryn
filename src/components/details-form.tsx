@@ -337,13 +337,6 @@ export function DetailsForm() {
                             <FormMessage />
                         </FormItem>
                     )} />
-                    <FormField control={form.control} name="email" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Email Address</FormLabel>
-                            <FormControl><Input type="email" placeholder="you@example.com" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                          <FormField control={form.control} name="phone" render={({ field }) => (
                             <FormItem>
@@ -360,6 +353,13 @@ export function DetailsForm() {
                             </FormItem>
                         )} />
                     </div>
+                     <FormField control={form.control} name="email" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Email Address</FormLabel>
+                            <FormControl><Input type="email" placeholder="you@example.com" {...field} /></FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
                     <FormField
                         control={form.control}
                         name="dob"
