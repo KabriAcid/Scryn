@@ -25,7 +25,7 @@ function RedemptionsTable() {
           <TableHead className="whitespace-nowrap">S/N</TableHead>
           <TableHead className="whitespace-nowrap">Date</TableHead>
           <TableHead className="whitespace-nowrap">Citizen Name</TableHead>
-          <TableHead className="whitespace-nowrap">Amount (₦)</TableHead>
+          <TableHead className="whitespace-nowrap">Amount</TableHead>
           <TableHead className="whitespace-nowrap">Card Code</TableHead>
           <TableHead className="whitespace-nowrap">Bank</TableHead>
           <TableHead className="whitespace-nowrap">Status</TableHead>
@@ -33,12 +33,12 @@ function RedemptionsTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {redemptions.map((redemption) => (
+        {redemptions.map((redemption, index) => (
           <TableRow key={redemption.id}>
-              <TableCell className="font-medium whitespace-nowrap">{redemption.id}</TableCell>
+              <TableCell className="font-medium whitespace-nowrap">{index + 1}</TableCell>
               <TableCell className="whitespace-nowrap">{redemption.date}</TableCell>
               <TableCell className="whitespace-nowrap">{redemption.citizenName}</TableCell>
-              <TableCell className="whitespace-nowrap">{redemption.amount.toLocaleString()}</TableCell>
+              <TableCell className="whitespace-nowrap">₦{redemption.amount.toLocaleString()}</TableCell>
               <TableCell className="whitespace-nowrap">{redemption.cardCode}</TableCell>
               <TableCell className="whitespace-nowrap">{redemption.bank}</TableCell>
               <TableCell className="whitespace-nowrap">
