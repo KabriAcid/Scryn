@@ -75,7 +75,7 @@ const STEPS = [
 
 const formSchema = z.object({
     accountName: z.string().min(2, { message: "Full name must be at least 2 characters." }).max(50, { message: "Full name cannot be more than 50 characters." }),
-    email: z.string().email({ message: "Please enter a valid email address." }).max(50, { message: "Email cannot be more than 50 characters." }),
+    email: z.string().email({ message: "Please enter a valid email address." }).max(50, { message: "Email cannot be more than 50 characters." }).optional().or(z.literal('')),
     phone: z.string().regex(/^0[789][01]\d{8}$/, { message: "Please enter a valid Nigerian phone number." }).max(11),
     nin: z.string().regex(/^\d{11}$/, { message: "NIN must be 11 digits." }).max(11),
     dob: z.date({ required_error: "Your date of birth is required." }).refine(date => {
@@ -355,7 +355,7 @@ export function DetailsForm() {
                     </div>
                      <FormField control={form.control} name="email" render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Email Address</FormLabel>
+                            <FormLabel>Email Address (Optional)</FormLabel>
                             <FormControl><Input type="email" placeholder="you@example.com" {...field} /></FormControl>
                             <FormMessage />
                         </FormItem>
@@ -365,7 +365,7 @@ export function DetailsForm() {
                         name="dob"
                         render={({ field }) => (
                             <FormItem className="flex flex-col">
-                            <FormLabel>Date of birth</FormLabel>
+                            <FormLabel>DOB</FormLabel>
                             <DobPicker
                                 value={field.value}
                                 onChange={field.onChange}
@@ -583,3 +583,5 @@ function SubmitButton({ pending }: { pending: boolean }) {
     </Button>
   );
 }
+
+    
